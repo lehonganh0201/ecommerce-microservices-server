@@ -1,0 +1,139 @@
+services:
+  # ========================== DATABASE SERVICES ==========================
+  postgres:
+    container_name: em_pg_sql  # PostgreSQL Database
+    image: postgres
+    environment:
+      POSTGRES_USER: lehonganh
+      POSTGRES_PASSWORD: lehonganh
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - ecommerce-microservices-net
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: em_pgadmin  # PostgreSQL Admin UI
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - 5050:80
+    networks:
+      - ecommerce-microservices-net
+    restart: unless-stopped
+
+  mongodb:
+    container_name: em_mongo_db  # MongoDB NoSQL Database
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo:/data
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=lehonganh
+      - MONGO_INITDB_ROOT_PASSWORD=lehonganh
+    networks:
+      - ecommerce-microservices-net
+
+  mongo-express:
+    container_name: em_mongo_express  # MongoDB Admin UI
+    image: mongo-express
+    restart: unless-stopped
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=lehonganh
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=lehonganh
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+    networks:
+      - ecommerce-microservices-net
+
+  # ========================== MESSAGE BROKER SERVICES ==========================
+  zookeeper:
+    container_name: em_zookeeper  # Kafka Dependency
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+    networks:
+      - ecommerce-microservices-net
+
+  kafka:
+    container_name: em_kafka  # Apache Kafka Message Broker
+    image: confluentinc/cp-kafka:latest
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    depends_on:
+      - zookeeper
+    networks:
+      - ecommerce-microservices-net
+
+  # ========================== MAIL SERVICE ==========================
+  mail-dev:
+    container_name: em_mail_dev  # SMTP Mail Testing Service
+    image: maildev/maildev
+    ports:
+      - 1080:1080
+      - 1025:1025
+    networks:
+      - ecommerce-microservices-net
+
+  # ========================== TRACING SERVICES ==========================
+  zipkin:
+    container_name: em_zipkin  # Distributed Tracing
+    image: openzipkin/zipkin
+    ports:
+      - 9411:9411
+    networks:
+      - ecommerce-microservices-net
+
+  # ========================== AUTHENTICATION SERVICES ==========================
+  keycloak:
+    container_name: em_keycloak  # Identity & Access Management
+    image: quay.io/keycloak/keycloak:24.0.2
+    ports:
+      - 9090:8080
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    networks:
+      - ecommerce-microservices-net
+    command:
+      - "start-dev"
+
+  # ========================== CACHING SERVICES ==========================
+  redis:
+    container_name: em_redis  # In-memory Cache & Session Storage
+    image: redis:7
+    restart: always
+    ports:
+      - 6379:6379
+    networks:
+      - ecommerce-microservices-net
+
+# ========================== NETWORK & VOLUMES ==========================
+networks:
+  ecommerce-microservices-net:
+    driver: bridge
+
+volumes:
+  postgres:  # Persistent storage for PostgreSQL
+  pgadmin:   # Persistent storage for pgAdmin
+  mongo:     # Persistent storage for MongoDB

@@ -113,6 +113,10 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/auth
+      KC_DB_USERNAME: lehonganh
+      KC_DB_PASSWORD: lehonganh
     networks:
       - ecommerce-microservices-net
     command:

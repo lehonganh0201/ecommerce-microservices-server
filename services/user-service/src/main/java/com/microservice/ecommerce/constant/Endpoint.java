@@ -21,5 +21,7 @@ public interface Endpoint {
 
     public interface Profile {
         String PREFIX = Endpoint.PREFIX + "/profiles";
+        String GET_BY_ID = "/{profileId}";
+        String UPDATE_BY_ID = "/{profileId}";
     }
 }

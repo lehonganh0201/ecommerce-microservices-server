@@ -5,6 +5,8 @@ import com.microservice.ecommerce.model.request.ProfileRequest;
 import com.microservice.ecommerce.model.response.ProfileResponse;
 import org.springframework.security.oauth2.jwt.Jwt;
 
+import java.util.List;
+
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
@@ -17,4 +19,10 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 public interface ProfileService {
     GlobalResponse<ProfileResponse> createProfile(ProfileRequest request, Jwt jwt);
+
+    GlobalResponse<List<ProfileResponse>> findAllCurrentUserProfile(Jwt jwt);
+
+    GlobalResponse<ProfileResponse> findProfileId(Integer profileId, Jwt jwt);
+
+    GlobalResponse<ProfileResponse> updateProfile(Integer profileId, ProfileRequest request, Jwt jwt);
 }

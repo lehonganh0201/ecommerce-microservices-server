@@ -11,10 +11,9 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * ----------------------------------------------------------------------------
@@ -39,5 +38,32 @@ public class ProfileController {
     ) {
         return ResponseEntity
                 .ok(profileService.createProfile(request, jwt));
+    }
+
+    @GetMapping()
+    public ResponseEntity<GlobalResponse<List<ProfileResponse>>> findAllCurrentUserProfile(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity
+                .ok(profileService.findAllCurrentUserProfile(jwt));
+    }
+
+    @GetMapping(Endpoint.Profile.GET_BY_ID)
+    public ResponseEntity<GlobalResponse<ProfileResponse>> findProfileById(
+            @PathVariable(name = "profileId") Integer profileId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity
+                .ok(profileService.findProfileId(profileId, jwt));
+    }
+
+    @PutMapping(Endpoint.Profile.UPDATE_BY_ID)
+    public ResponseEntity<GlobalResponse<ProfileResponse>> updateProfile(
+            @PathVariable(name = "profileId") Integer profileId,
+            @ModelAttribute ProfileRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity
+                .ok(profileService.updateProfile(profileId, request, jwt));
     }
 }

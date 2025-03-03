@@ -1,7 +1,6 @@
 package com.microservice.ecommerce.model.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 /**
  * ----------------------------------------------------------------------------

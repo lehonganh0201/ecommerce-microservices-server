@@ -3,7 +3,6 @@ package com.microservice.ecommerce.service;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.request.ProfileRequest;
 import com.microservice.ecommerce.model.response.ProfileResponse;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 /**

@@ -2,7 +2,6 @@ package com.microservice.ecommerce.controller;
 
 import com.microservice.ecommerce.constant.Endpoint;
 import com.microservice.ecommerce.model.global.GlobalResponse;
-import com.microservice.ecommerce.model.request.ProfileRequest;
 import com.microservice.ecommerce.model.request.UserRequest;
 import com.microservice.ecommerce.model.response.UserResponse;
 import com.microservice.ecommerce.service.UserService;

@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 
 public record ProfileRequest(
         MultipartFile avatar,
-        boolean gender,
+        Boolean gender,
         LocalDateTime dateOfBirth
 ) {
 }

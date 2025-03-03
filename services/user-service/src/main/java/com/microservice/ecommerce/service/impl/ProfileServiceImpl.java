@@ -195,8 +195,13 @@ public class ProfileServiceImpl implements ProfileService {
             }
         }
 
-        // ✅ Cập nhật thông tin từ request
-        profileMapper.updateProfile(request, profile);
+        if (request.gender() != null) {
+            profile.setGender(request.gender());
+        }
+
+        if (request.dateOfBirth() != null) {
+            profile.setDateOfBirth(request.dateOfBirth());
+        }
 
         if (!request.avatar().isEmpty()) {
             profile.setAvatarUrl(filePath.toAbsolutePath().toString());

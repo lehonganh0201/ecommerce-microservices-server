@@ -21,5 +21,4 @@ public interface ProfileMapper {
     @Mapping(source = "avatarUrl", target = "avatar")
     ProfileResponse toProfileResponse(UserProfile profile);
 
-    void updateProfile(ProfileRequest request, @MappingTarget UserProfile profile);
 }

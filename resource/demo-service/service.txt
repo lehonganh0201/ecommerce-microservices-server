@@ -1,0 +1,138 @@
+ecommerce-microservices/
+├── api-gateway/
+│   ├── src/main/java/com/example/gateway/
+│   │   ├── GatewayApplication.java
+│   │   ├── config/
+│   │   │   ├── SecurityConfig.java
+│   │   │   ├── RouteConfig.java
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── service-registry/  # Eureka Server
+│   ├── src/main/java/com/example/registry/
+│   │   ├── ServiceRegistryApplication.java
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── config-server/  # Centralized Config
+│   ├── src/main/java/com/example/configserver/
+│   │   ├── ConfigServerApplication.java
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── auth-service/  # Keycloak Integration
+│   ├── src/main/java/com/example/auth/
+│   │   ├── AuthServiceApplication.java
+│   │   ├── config/
+│   │   │   ├── SecurityConfig.java
+│   │   ├── controller/
+│   │   │   ├── AuthController.java
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── user-service/  # User Management
+│   ├── src/main/java/com/example/user/
+│   │   ├── UserServiceApplication.java
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── product-service/  # Product Management + Elasticsearch
+│   ├── src/main/java/com/example/product/
+│   │   ├── ProductServiceApplication.java
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── order-service/  # Order Processing + Kafka
+│   ├── src/main/java/com/example/order/
+│   │   ├── OrderServiceApplication.java
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── cart-service/  # Shopping Cart + Redis Cache
+│   ├── src/main/java/com/example/cart/
+│   │   ├── CartServiceApplication.java
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── inventory-service/  # Stock Management
+│   ├── src/main/java/com/example/inventory/
+│   │   ├── InventoryServiceApplication.java
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── shipping-service/  # Logistics and Shipping
+│   ├── src/main/java/com/example/shipping/
+│   │   ├── ShippingServiceApplication.java
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── payment-service/  # Payment Gateway Integration
+│   ├── src/main/java/com/example/payment/
+│   │   ├── PaymentServiceApplication.java
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── search-service/  # Full-Text Search with Elasticsearch
+│   ├── src/main/java/com/example/search/
+│   │   ├── SearchServiceApplication.java
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── recommendation-service/  # Personalized Recommendations
+│   ├── src/main/java/com/example/recommendation/
+│   │   ├── RecommendationServiceApplication.java
+│   │   ├── controller/
+│   │   ├── service/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── review-service/  # Customer Reviews & Ratings
+│   ├── src/main/java/com/example/review/
+│   │   ├── ReviewServiceApplication.java
+│   │   ├── controller/
+│   │   ├── service/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── analytics-service/  # Analytics & Reporting
+│   ├── src/main/java/com/example/analytics/
+│   │   ├── AnalyticsServiceApplication.java
+│   │   ├── controller/
+│   │   ├── service/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── notification-service/  # Kafka Consumer for Email/SMS
+│   ├── src/main/java/com/example/notification/
+│   │   ├── NotificationServiceApplication.java
+│   │   ├── service/
+│   │   ├── config/
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│
+├── docker-compose.yml  # Docker setup for Keycloak, Kafka, Redis, Elasticsearch
+└── README.md  # Setup Guide

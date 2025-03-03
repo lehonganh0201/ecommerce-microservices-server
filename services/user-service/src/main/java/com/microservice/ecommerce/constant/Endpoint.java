@@ -15,6 +15,7 @@ public interface Endpoint {
 
     public interface User {
         String PREFIX = Endpoint.PREFIX + "/users";
+        String ME = "/me";
     }
 
     public interface Profile {

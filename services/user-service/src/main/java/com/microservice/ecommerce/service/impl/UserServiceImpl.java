@@ -14,6 +14,7 @@ import com.microservice.ecommerce.repository.AddressRepository;
 import com.microservice.ecommerce.repository.RoleRepository;
 import com.microservice.ecommerce.repository.UserRepository;
 import com.microservice.ecommerce.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -66,6 +67,7 @@ public class UserServiceImpl implements UserService {
 
         UserResponse response = new UserResponse(
                 user.getUsername(),
+                (String) jwt.getClaims().get("name"),
                 user.getEmail(),
                 user.getPhoneNumber(),
                 addressMapper.toAddressResponse(address)
@@ -74,6 +76,31 @@ public class UserServiceImpl implements UserService {
         return new GlobalResponse<>(
                 Status.SUCCESS,
                 response
+        );
+    }
+
+    @Override
+    public GlobalResponse<UserResponse> findCurrentUser(Jwt jwt) {
+        var user = userRepository.findById(jwt.getSubject());
+
+        if (user.isPresent()) {
+            UserResponse response = new UserResponse(
+                    user.get().getUsername(),
+                    (String) jwt.getClaims().get("name"),
+                    user.get().getEmail(),
+                    user.get().getPhoneNumber(),
+                    null
+            );
+
+            return new GlobalResponse<>(
+                    Status.SUCCESS,
+                    response
+            );
+        }
+
+        return new GlobalResponse<>(
+                Status.ERROR,
+                null
         );
     }
 }

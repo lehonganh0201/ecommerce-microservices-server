@@ -17,4 +17,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 public interface UserService {
     GlobalResponse<UserResponse> createUser(UserRequest request, Jwt jwt);
+
+    GlobalResponse<UserResponse> findCurrentUser(Jwt jwt);
 }

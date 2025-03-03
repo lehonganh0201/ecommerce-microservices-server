@@ -12,6 +12,7 @@ package com.microservice.ecommerce.model.response;
 
 public record UserResponse(
         String username,
+        String fullName,
         String email,
         String phoneNumber,
         AddressResponse address

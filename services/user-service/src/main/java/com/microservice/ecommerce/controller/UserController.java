@@ -39,4 +39,12 @@ public class UserController {
         return ResponseEntity
                 .ok(userService.createUser(request, jwt));
     }
+
+    @GetMapping(Endpoint.User.ME)
+    public ResponseEntity<GlobalResponse<UserResponse>> findCurrentUser(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity
+                .ok(userService.findCurrentUser(jwt));
+    }
 }

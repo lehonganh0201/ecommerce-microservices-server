@@ -19,4 +19,6 @@ public interface UserService {
     GlobalResponse<UserResponse> createUser(UserRequest request, Jwt jwt);
 
     GlobalResponse<UserResponse> findCurrentUser(Jwt jwt);
+
+    GlobalResponse<UserResponse> updateUser(Integer addressId, UserRequest request, Jwt jwt);
 }

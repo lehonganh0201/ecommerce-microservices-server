@@ -4,6 +4,7 @@ import com.microservice.ecommerce.model.entity.User;
 import com.microservice.ecommerce.model.request.UserRequest;
 import com.microservice.ecommerce.model.response.UserResponse;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValueCheckStrategy;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
@@ -22,4 +23,5 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface UserMapper {
     User toUser(UserRequest request);
     UserResponse toUserResponse(User user);
+    void updateUser(UserRequest request, @MappingTarget User user);
 }

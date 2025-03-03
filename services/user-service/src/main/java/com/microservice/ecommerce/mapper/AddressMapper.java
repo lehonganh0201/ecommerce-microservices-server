@@ -4,6 +4,7 @@ import com.microservice.ecommerce.model.entity.Address;
 import com.microservice.ecommerce.model.request.AddressRequest;
 import com.microservice.ecommerce.model.response.AddressResponse;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValueCheckStrategy;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
@@ -22,4 +23,5 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface AddressMapper {
     Address toAddress(AddressRequest request);
     AddressResponse toAddressResponse(Address address);
+    void updateAddress(AddressRequest request, @MappingTarget Address address);
 }

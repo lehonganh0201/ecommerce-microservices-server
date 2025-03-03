@@ -1,6 +1,7 @@
 package com.microservice.ecommerce.service.impl;
 
 import com.microservice.ecommerce.constant.RoleType;
+import com.microservice.ecommerce.exception.BusinessException;
 import com.microservice.ecommerce.mapper.AddressMapper;
 import com.microservice.ecommerce.mapper.UserMapper;
 import com.microservice.ecommerce.model.entity.Address;
@@ -101,6 +102,40 @@ public class UserServiceImpl implements UserService {
         return new GlobalResponse<>(
                 Status.ERROR,
                 null
+        );
+    }
+
+    @Override
+    public GlobalResponse<UserResponse> updateUser(Integer addressId, UserRequest request, Jwt jwt) {
+        User user = userRepository.findById(jwt.getSubject())
+                .orElseThrow(() -> new EntityNotFoundException("Not found current user, please try again"));
+        Address address = null;
+        if (addressId != null) {
+             address = addressRepository.findById(addressId)
+                    .orElseThrow(() -> new EntityNotFoundException("Not found address id provide " + addressId));
+
+            if (!address.getUser().equals(user)) {
+                throw new BusinessException("This address does not belong to the current user");
+            }
+
+            addressMapper.updateAddress(request.address(), address);
+
+            address = addressRepository.save(address);
+        }
+
+        userMapper.updateUser(request, user);
+
+        user = userRepository.save(user);
+
+        return new GlobalResponse<>(
+                Status.SUCCESS,
+                new UserResponse(
+                        user.getUsername(),
+                        (String) jwt.getClaims().get("name"),
+                        user.getEmail(),
+                        user.getPhoneNumber(),
+                        addressMapper.toAddressResponse(address)
+                )
         );
     }
 }

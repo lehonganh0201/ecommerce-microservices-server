@@ -47,4 +47,14 @@ public class UserController {
         return ResponseEntity
                 .ok(userService.findCurrentUser(jwt));
     }
+
+    @PutMapping
+    public ResponseEntity<GlobalResponse<UserResponse>> updateCurrentUser(
+            @RequestParam(name = "addressId", required = false) Integer addressId,
+            @RequestBody @Valid UserRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity
+                .ok(userService.updateUser(addressId, request, jwt));
+    }
 }

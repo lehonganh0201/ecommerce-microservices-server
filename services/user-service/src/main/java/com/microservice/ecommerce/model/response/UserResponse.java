@@ -1,0 +1,19 @@
+package com.microservice.ecommerce.model.response;
+
+/**
+ * ----------------------------------------------------------------------------
+ * Author:        Hong Anh
+ * Created on:    03/03/2025 at 8:01 PM
+ * Project:       ecommerce-microservices
+ * Contact:       https://github.com/lehonganh0201
+ * ----------------------------------------------------------------------------
+ */
+
+
+public record UserResponse(
+        String username,
+        String email,
+        String phoneNumber,
+        AddressResponse address
+) {
+}

@@ -3,10 +3,7 @@ package com.microservice.ecommerce.model.mapper;
 import com.microservice.ecommerce.model.entity.Product;
 import com.microservice.ecommerce.model.request.ProductRequest;
 import com.microservice.ecommerce.model.response.ProductResponse;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.NullValueCheckStrategy;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 /**
  * ----------------------------------------------------------------------------
@@ -18,7 +15,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
  */
 
 @Mapper(componentModel = "spring",
-    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT,
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
     nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
 public interface ProductMapper {
     Product toProduct(ProductRequest request);
@@ -26,4 +23,7 @@ public interface ProductMapper {
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "variants", ignore = true)
     ProductResponse toProductResponse(Product product);
+
+    @Mapping(target = "images", ignore = true)
+    void updateProduct(ProductRequest request, @MappingTarget Product product);
 }

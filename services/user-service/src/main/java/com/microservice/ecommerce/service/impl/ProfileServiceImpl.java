@@ -47,7 +47,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     ProfileMapper profileMapper;
 
-    private static final String BASE_DIRECTORY = "./resource/images/user-avatar/";
+    private static final String BASE_DIRECTORY = "/resource/images/user-avatar/";
     private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
 
     @Override

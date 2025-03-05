@@ -22,6 +22,7 @@ import com.microservice.ecommerce.repository.ProductRepository;
 import com.microservice.ecommerce.service.ProductService;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -30,18 +31,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -68,7 +70,7 @@ public class ProductServiceImpl implements ProductService {
 
     UserServiceClient userServiceClient;
 
-    private static final String BASE_DIRECTORY = "./resource/images/product-images/";
+    private static final String BASE_DIRECTORY = "/resource/images/product-images/";
     private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
 
     @Override
@@ -209,7 +211,12 @@ public class ProductServiceImpl implements ProductService {
 
         ProductResponse response = productMapper.toProductResponse(product);
         response.setImages(product.getImages().stream()
-                .map(imageMapper::toProductImageResponse)
+                .map(productImage -> {
+                    var imageResponse = imageMapper.toProductImageResponse(productImage);
+                    imageResponse.setImageUrl(ROOT_DIRECTORY + imageResponse.getImageUrl());
+
+                    return imageResponse;
+                })
                 .collect(Collectors.toList())
         );
         response.setVariants(product.getVariants().stream()
@@ -238,7 +245,160 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public GlobalResponse<ProductResponse> updateProduct(UUID productId, ProductRequest request) {
-        return null;
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with ID: " + productId));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            if (!product.getCreatedBy().equals(jwt.getClaimAsString("name"))) {
+                throw new BusinessException("You cannot update product from another store.");
+            }
+        }else{
+            throw new BusinessException("You authentication is not available, please try again.");
+        }
+
+
+        productMapper.updateProduct(request, product);
+
+        if (request.images() != null && !request.images().isEmpty()) {
+            Iterator<ProductImage> iterator = product.getImages().iterator();
+            while (iterator.hasNext()) {
+                ProductImage oldImage = iterator.next();
+                File file = new File(oldImage.getImageUrl());
+                if (file.exists()) {
+                    file.delete();
+                }
+                iterator.remove();
+            }
+
+            List<ProductImage> images = new ArrayList<>();
+            try {
+                File directory = new File(BASE_DIRECTORY);
+                if (!directory.exists()) {
+                    directory.mkdirs();
+                }
+
+                for (var image : request.images()) {
+                    if (!image.isEmpty()) {
+                        String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
+                        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                        String newFileName = UUID.randomUUID() + fileExtension;
+                        Path filePath = Paths.get(BASE_DIRECTORY + newFileName);
+
+                        Files.write(filePath, image.getBytes());
+
+                        ProductImage productImage = ProductImage.builder()
+                                .imageUrl(filePath.toString())
+                                .product(product)
+                                .build();
+
+                        images.add(productImage);
+                    }
+                }
+
+                product.setImages(images);
+            } catch (Exception ex) {
+                log.error(ex.getMessage());
+                throw new RuntimeException("Không thể cập nhật ảnh sản phẩm, vui lòng thử lại sau.");
+            }
+        }
+
+        product = productRepository.save(product);
+
+        List<ProductImageResponse> imageResponses = product.getImages().stream()
+                .map(productImage -> ProductImageResponse.builder()
+                        .id(productImage.getId())
+                        .imageUrl(ROOT_DIRECTORY + productImage.getImageUrl())
+                        .build())
+                .collect(Collectors.toList());
+
+        ProductResponse response = ProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .stock(product.getStock())
+                .createdBy(product.getCreatedBy())
+                .createdDate(product.getCreatedDate())
+                .images(imageResponses)
+                .build();
+
+        return new GlobalResponse<>(Status.SUCCESS, response);
     }
+
+    @Override
+    @Transactional
+    public GlobalResponse<ProductResponse> uploadImage(UUID productId, List<MultipartFile> images) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with ID: " + productId));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            if (!product.getCreatedBy().equals(jwt.getClaimAsString("name"))) {
+                throw new BusinessException("You cannot update product from another store.");
+            }
+        }else{
+            throw new BusinessException("You authentication is not available, please try again.");
+        }
+
+        List<ProductImage> newImages = new ArrayList<>();
+
+        try {
+            File directory = new File(BASE_DIRECTORY);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            for (var image : images) {
+                if (!image.isEmpty()) {
+                    String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
+                    String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                    String newFileName = UUID.randomUUID() + fileExtension;
+                    Path filePath = Paths.get(BASE_DIRECTORY + newFileName);
+
+                    Files.write(filePath, image.getBytes());
+
+                    ProductImage productImage = ProductImage.builder()
+                            .imageUrl(filePath.toString())
+                            .product(product)
+                            .build();
+
+                    newImages.add(productImage);
+                }
+            }
+
+            product.getImages().addAll(newImages);
+            productRepository.save(product);
+
+            List<ProductImageResponse> imageResponses = product.getImages().stream()
+                    .map(productImage -> ProductImageResponse.builder()
+                            .id(productImage.getId())
+                            .imageUrl(ROOT_DIRECTORY + productImage.getImageUrl())
+                            .build())
+                    .collect(Collectors.toList());
+
+            ProductResponse response = ProductResponse.builder()
+                    .id(product.getId())
+                    .name(product.getName())
+                    .description(product.getDescription())
+                    .price(product.getPrice())
+                    .stock(product.getStock())
+                    .createdBy(product.getCreatedBy())
+                    .createdDate(product.getCreatedDate())
+                    .images(imageResponses)
+                    .build();
+
+            return new GlobalResponse<>(Status.SUCCESS, response);
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
+            throw new RuntimeException("Không thể thêm ảnh, vui lòng thử lại sau.");
+        }
+    }
+
+
+
 }

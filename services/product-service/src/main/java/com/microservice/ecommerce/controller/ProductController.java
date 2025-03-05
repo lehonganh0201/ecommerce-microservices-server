@@ -12,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -66,9 +68,18 @@ public class ProductController {
     @PutMapping(Endpoint.Product.PRODUCT_ID)
     public ResponseEntity<GlobalResponse<ProductResponse>> updateProduct(
             @PathVariable(name = "productId") UUID productId,
-            @ModelAttribute @Valid ProductRequest request
+            @ModelAttribute ProductRequest request
     ) {
         return ResponseEntity
                 .ok(productService.updateProduct(productId, request));
     }
+
+    @PutMapping(Endpoint.Product.UPLOAD)
+    public ResponseEntity<GlobalResponse<ProductResponse>> uploadImage(
+            @PathVariable(name = "productId") UUID productId,
+            @RequestParam("images") List<MultipartFile> images
+    ) {
+        return ResponseEntity.ok(productService.uploadImage(productId, images));
+    }
+
 }

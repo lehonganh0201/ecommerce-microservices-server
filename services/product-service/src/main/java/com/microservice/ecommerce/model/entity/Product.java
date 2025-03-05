@@ -3,6 +3,7 @@ package com.microservice.ecommerce.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -47,6 +48,10 @@ public class Product {
     Integer stock;
 
     Boolean isActive = true;
+
+    @CreatedBy
+    @Column(nullable = false, updatable = false)
+    String createdBy;
 
     @ManyToOne
     @JoinColumn(name = "category_id")

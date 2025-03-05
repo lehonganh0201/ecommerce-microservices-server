@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS products
   description TEXT,
   price DOUBLE PRECISION NOT NULL,
   stock INTEGER,
+  created_by VARCHAR(255) NOT NULL,
   is_active BOOLEAN DEFAULT TRUE,
   category_id UUID,
   created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

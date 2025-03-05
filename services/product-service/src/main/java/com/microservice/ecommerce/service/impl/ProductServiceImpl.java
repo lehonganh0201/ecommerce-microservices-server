@@ -8,9 +8,12 @@ import com.microservice.ecommerce.model.global.PageResponse;
 import com.microservice.ecommerce.model.global.Status;
 import com.microservice.ecommerce.model.mapper.ProductImageMapper;
 import com.microservice.ecommerce.model.mapper.ProductMapper;
+import com.microservice.ecommerce.model.mapper.ProductVariantMapper;
 import com.microservice.ecommerce.model.request.ProductRequest;
+import com.microservice.ecommerce.model.response.ProductAttributeResponse;
 import com.microservice.ecommerce.model.response.ProductImageResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
+import com.microservice.ecommerce.model.response.ProductVariantResponse;
 import com.microservice.ecommerce.repository.CategoryRepository;
 import com.microservice.ecommerce.repository.ProductImageRepository;
 import com.microservice.ecommerce.repository.ProductRepository;
@@ -56,6 +59,7 @@ public class ProductServiceImpl implements ProductService {
 
     ProductMapper productMapper;
     ProductImageMapper imageMapper;
+    ProductVariantMapper variantMapper;
 
     private static final String BASE_DIRECTORY = "./resource/images/product-images/";
     private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
@@ -173,6 +177,41 @@ public class ProductServiceImpl implements ProductService {
                         productPage.hasNext(),
                         productPage.hasPrevious()
                 )
+        );
+    }
+
+    @Override
+    public GlobalResponse<ProductResponse> getProductById(UUID productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Not found product with provided:: " + productId));
+
+        ProductResponse response = productMapper.toProductResponse(product);
+        response.setImages(product.getImages().stream()
+                .map(imageMapper::toProductImageResponse)
+                .collect(Collectors.toList())
+        );
+        response.setVariants(product.getVariants().stream()
+                .map(variant -> {
+                    ProductVariantResponse variantResponse = variantMapper.toProductVariantResponse(variant);
+                    variantResponse.setAttributes(
+                            variant.getAttributes().stream()
+                                    .map(attribute -> {
+                                        ProductAttributeResponse attributeResponse = ProductAttributeResponse.builder()
+                                                .id(attribute.getId())
+                                                .type(attribute.getType().getValue())
+                                                .value(attribute.getValue())
+                                                .build();
+
+                                        return attributeResponse;
+                                    })
+                                    .collect(Collectors.toList())
+                    );
+                    return variantResponse;
+                }).toList());
+
+        return new GlobalResponse<>(
+                Status.SUCCESS,
+                response
         );
     }
 }

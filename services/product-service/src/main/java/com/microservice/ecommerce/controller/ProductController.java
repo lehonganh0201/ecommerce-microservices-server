@@ -13,6 +13,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 
 /**
  * ----------------------------------------------------------------------------
@@ -51,5 +53,13 @@ public class ProductController {
     ) {
         return ResponseEntity
                 .ok(productService.findAllProducts(sortedBy, sortDirection, page, size, searchKeyword, category, minPrice, maxPrice));
+    }
+
+    @GetMapping(Endpoint.Product.PRODUCT_ID)
+    public ResponseEntity<GlobalResponse<ProductResponse>> getProductById(
+            @PathVariable(name = "productId")UUID productId
+    ) {
+        return ResponseEntity
+                .ok(productService.getProductById(productId));
     }
 }

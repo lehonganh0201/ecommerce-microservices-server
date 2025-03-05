@@ -3,13 +3,12 @@ package com.microservice.ecommerce.model.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
- * Created on:    05/03/2025 at 10:32 PM
+ * Created on:    06/03/2025 at 12:44 AM
  * Project:       ecommerce-microservices
  * Contact:       https://github.com/lehonganh0201
  * ----------------------------------------------------------------------------
@@ -21,14 +20,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class ProductVariantResponse {
+public class ProductAttributeResponse {
     UUID id;
-
-    Integer stock;
-
-    Double price;
-
-    List<ProductAttributeResponse> attributes;
-
-    ProductImageResponse image;
+    String type;
+    String value;
 }

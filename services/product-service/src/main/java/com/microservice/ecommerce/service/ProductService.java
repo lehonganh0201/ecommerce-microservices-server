@@ -6,6 +6,8 @@ import com.microservice.ecommerce.model.request.ProductRequest;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import org.springframework.security.oauth2.jwt.Jwt;
 
+import java.util.UUID;
+
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
@@ -20,4 +22,6 @@ public interface ProductService {
     GlobalResponse<ProductResponse> createProduct(ProductRequest request);
 
     GlobalResponse<PageResponse<ProductResponse>> findAllProducts(String sortedBy, String sortDirection, int page, int size, String searchKeyword, String category, Double minPrice, Double maxPrice);
+
+    GlobalResponse<ProductResponse> getProductById(UUID productId);
 }

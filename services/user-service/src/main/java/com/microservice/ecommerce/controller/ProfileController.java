@@ -41,7 +41,7 @@ public class ProfileController {
     }
 
     @GetMapping()
-    public ResponseEntity<GlobalResponse<List<ProfileResponse>>> findCurrentUserProfile(
+    public ResponseEntity<GlobalResponse<ProfileResponse>> findCurrentUserProfile(
             @AuthenticationPrincipal Jwt jwt
     ) {
         return ResponseEntity

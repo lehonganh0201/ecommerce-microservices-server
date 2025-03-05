@@ -1,5 +1,7 @@
 package com.microservice.ecommerce.service.impl;
 
+import com.microservice.ecommerce.client.UserServiceClient;
+import com.microservice.ecommerce.exception.BusinessException;
 import com.microservice.ecommerce.model.entity.Category;
 import com.microservice.ecommerce.model.entity.Product;
 import com.microservice.ecommerce.model.entity.ProductImage;
@@ -18,6 +20,7 @@ import com.microservice.ecommerce.repository.CategoryRepository;
 import com.microservice.ecommerce.repository.ProductImageRepository;
 import com.microservice.ecommerce.repository.ProductRepository;
 import com.microservice.ecommerce.service.ProductService;
+import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -61,11 +66,27 @@ public class ProductServiceImpl implements ProductService {
     ProductImageMapper imageMapper;
     ProductVariantMapper variantMapper;
 
+    UserServiceClient userServiceClient;
+
     private static final String BASE_DIRECTORY = "./resource/images/product-images/";
     private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
 
     @Override
     public GlobalResponse<ProductResponse> createProduct(ProductRequest request) {
+        try {
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            String token = "Bearer ";
+
+            if (authentication instanceof JwtAuthenticationToken authenticationToken) {
+                token += authenticationToken.getToken().getTokenValue();
+            }
+
+            userServiceClient.checkUserProfile(token);
+        }catch (FeignException.Unauthorized ex) {
+            throw new BusinessException("User must have a profile before creating a product.");
+        }
+
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Not found category with ID provided:: " + request.categoryId()));
 

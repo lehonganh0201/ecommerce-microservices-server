@@ -20,7 +20,7 @@ import java.util.List;
 public interface ProfileService {
     GlobalResponse<ProfileResponse> createProfile(ProfileRequest request, Jwt jwt);
 
-    GlobalResponse<List<ProfileResponse>> findCurrentUserProfile(Jwt jwt);
+    GlobalResponse<ProfileResponse> findCurrentUserProfile(Jwt jwt);
 
     GlobalResponse<ProfileResponse> findProfileId(Integer profileId, Jwt jwt);
 

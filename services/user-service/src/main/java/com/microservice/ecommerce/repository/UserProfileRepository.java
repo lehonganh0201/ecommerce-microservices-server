@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * ----------------------------------------------------------------------------
@@ -19,5 +20,5 @@ import java.util.List;
 @Repository
 public interface UserProfileRepository extends JpaRepository<UserProfile, Integer> {
     @Query("SELECT p FROM UserProfile p WHERE p.user.id = :userId")
-    List<UserProfile> findAllByUserId(String userId);
+    Optional<UserProfile> findByUserId(String userId);
 }

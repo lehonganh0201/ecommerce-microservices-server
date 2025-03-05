@@ -41,11 +41,11 @@ public class ProfileController {
     }
 
     @GetMapping()
-    public ResponseEntity<GlobalResponse<List<ProfileResponse>>> findAllCurrentUserProfile(
+    public ResponseEntity<GlobalResponse<ProfileResponse>> findCurrentUserProfile(
             @AuthenticationPrincipal Jwt jwt
     ) {
         return ResponseEntity
-                .ok(profileService.findAllCurrentUserProfile(jwt));
+                .ok(profileService.findCurrentUserProfile(jwt));
     }
 
     @GetMapping(Endpoint.Profile.GET_BY_ID)

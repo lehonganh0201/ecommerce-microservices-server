@@ -71,6 +71,7 @@ public class ProductServiceImpl implements ProductService {
 
         Product product = productMapper.toProduct(request);
         product.setCategory(category);
+        product.setIsActive(true);
 
         List<ProductImage> images = new ArrayList<>();
 
@@ -91,16 +92,16 @@ public class ProductServiceImpl implements ProductService {
 
                     ProductImage productImage = ProductImage.builder()
                             .imageUrl(filePath.toString())
-                            .product(product) // 🔹 Gán product vào từng ProductImage
+                            .product(product)
                             .build();
 
                     images.add(productImage);
                 }
             }
 
-            product.setImages(images); // 🔹 Gán danh sách ảnh vào Product trước khi lưu
+            product.setImages(images);
 
-            product = productRepository.save(product); // 🔹 Chỉ gọi save một lần để tránh mất quan hệ
+            product = productRepository.save(product);
 
             List<ProductImageResponse> imageResponses = product.getImages().stream()
                     .map(productImage -> ProductImageResponse.builder()
@@ -213,5 +214,10 @@ public class ProductServiceImpl implements ProductService {
                 Status.SUCCESS,
                 response
         );
+    }
+
+    @Override
+    public GlobalResponse<ProductResponse> updateProduct(UUID productId, ProductRequest request) {
+        return null;
     }
 }

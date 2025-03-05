@@ -1,5 +1,7 @@
 package com.microservice.ecommerce.model.response;
 
+import java.util.List;
+
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
@@ -15,6 +17,6 @@ public record UserResponse(
         String fullName,
         String email,
         String phoneNumber,
-        AddressResponse address
+        List<AddressResponse> addresses
 ) {
 }

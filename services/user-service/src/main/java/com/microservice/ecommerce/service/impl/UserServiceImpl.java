@@ -23,6 +23,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
@@ -71,7 +73,7 @@ public class UserServiceImpl implements UserService {
                 (String) jwt.getClaims().get("name"),
                 user.getEmail(),
                 user.getPhoneNumber(),
-                addressMapper.toAddressResponse(address)
+                List.of(addressMapper.toAddressResponse(address))
         );
 
         return new GlobalResponse<>(
@@ -134,7 +136,7 @@ public class UserServiceImpl implements UserService {
                         (String) jwt.getClaims().get("name"),
                         user.getEmail(),
                         user.getPhoneNumber(),
-                        addressMapper.toAddressResponse(address)
+                        List.of(addressMapper.toAddressResponse(address))
                 )
         );
     }

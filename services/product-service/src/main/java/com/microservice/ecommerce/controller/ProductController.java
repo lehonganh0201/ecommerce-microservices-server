@@ -62,4 +62,13 @@ public class ProductController {
         return ResponseEntity
                 .ok(productService.getProductById(productId));
     }
+
+    @PutMapping(Endpoint.Product.PRODUCT_ID)
+    public ResponseEntity<GlobalResponse<ProductResponse>> updateProduct(
+            @PathVariable(name = "productId") UUID productId,
+            @ModelAttribute @Valid ProductRequest request
+    ) {
+        return ResponseEntity
+                .ok(productService.updateProduct(productId, request));
+    }
 }

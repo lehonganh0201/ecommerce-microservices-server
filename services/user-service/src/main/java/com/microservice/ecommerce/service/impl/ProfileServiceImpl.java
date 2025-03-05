@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * ----------------------------------------------------------------------------
@@ -97,8 +99,8 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public GlobalResponse<ProfileResponse> findCurrentUserProfile(Jwt jwt) {
-        Optional<UserProfile> profile = profileRepository.findByUserId(jwt.getSubject());
+    public GlobalResponse<List<ProfileResponse>> findCurrentUserProfile(Jwt jwt) {
+        List<UserProfile> profiles = profileRepository.findAllByUserId(jwt.getSubject());
 //        var responses = profiles.stream()
 //                .map(profile -> {
 //                    var response = new ProfileResponse(
@@ -112,20 +114,25 @@ public class ProfileServiceImpl implements ProfileService {
 //                .collect(Collectors.toList()
 //                );
 
-        if (!profile.isPresent()) {
+        if (profiles.isEmpty()) {
             throw new EntityNotFoundException("Not found current user profile");
         }
 
-        var response = new ProfileResponse(
-            profile.get().getId(),
-            ROOT_DIRECTORY + profile.get().getAvatarUrl(),
-            profile.get().isGender(),
-            profile.get().getDateOfBirth()
-        );
+        var responses = profiles.stream()
+                .map(profile -> {
+                    ProfileResponse response = new ProfileResponse(
+                              profile.getId(),
+                            ROOT_DIRECTORY + profile.getAvatarUrl(),
+                            profile.isGender(),
+                            profile.getDateOfBirth()
+                    );
+
+                    return response;
+        }).collect(Collectors.toList());
 
         return new GlobalResponse<>(
                 Status.SUCCESS,
-                response
+                responses
         );
     }
 
@@ -134,12 +141,10 @@ public class ProfileServiceImpl implements ProfileService {
         UserProfile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot found profile with ID:: " + profileId));
 
-        var currentUserProfile = profileRepository.findByUserId(jwt.getSubject());
+        var currentUserProfiles = profileRepository.findAllByUserId(jwt.getSubject());
 
-        boolean flag = false;
-        if (currentUserProfile.isPresent() && currentUserProfile.get().equals(profile)) {
-            flag = true;
-        }
+        boolean flag = currentUserProfiles.stream()
+                .anyMatch(userProfile -> userProfile.equals(profile));
 
         if (flag) {
             return new GlobalResponse<>(
@@ -164,12 +169,10 @@ public class ProfileServiceImpl implements ProfileService {
         UserProfile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new EntityNotFoundException("Not found any profile with provided ID."));
 
-        var currentUserProfile = profileRepository.findByUserId(jwt.getSubject());
+        var currentUserProfiles = profileRepository.findAllByUserId(jwt.getSubject());
 
-        boolean flag = false;
-        if (currentUserProfile.isPresent() && currentUserProfile.get().equals(profile)) {
-            flag = true;
-        }
+        boolean flag = currentUserProfiles.stream()
+                .anyMatch(userProfile -> userProfile.getId().equals(profileId));
 
         if (!flag) {
             throw new BusinessException("This profile not belong to own");

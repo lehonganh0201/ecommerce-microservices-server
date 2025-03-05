@@ -24,4 +24,6 @@ public interface ProductService {
     GlobalResponse<PageResponse<ProductResponse>> findAllProducts(String sortedBy, String sortDirection, int page, int size, String searchKeyword, String category, Double minPrice, Double maxPrice);
 
     GlobalResponse<ProductResponse> getProductById(UUID productId);
+
+    GlobalResponse<ProductResponse> updateProduct(UUID productId, ProductRequest request);
 }

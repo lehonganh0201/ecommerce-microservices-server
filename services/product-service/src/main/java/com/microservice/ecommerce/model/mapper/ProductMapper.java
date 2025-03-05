@@ -1,0 +1,29 @@
+package com.microservice.ecommerce.model.mapper;
+
+import com.microservice.ecommerce.model.entity.Product;
+import com.microservice.ecommerce.model.request.ProductRequest;
+import com.microservice.ecommerce.model.response.ProductResponse;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.NullValueCheckStrategy;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+
+/**
+ * ----------------------------------------------------------------------------
+ * Author:        Hong Anh
+ * Created on:    05/03/2025 at 10:16 PM
+ * Project:       ecommerce-microservices
+ * Contact:       https://github.com/lehonganh0201
+ * ----------------------------------------------------------------------------
+ */
+
+@Mapper(componentModel = "spring",
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT,
+    nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
+public interface ProductMapper {
+    Product toProduct(ProductRequest request);
+
+    @Mapping(target = "images", ignore = true)
+    @Mapping(target = "variants", ignore = true)
+    ProductResponse toProductResponse(Product product);
+}

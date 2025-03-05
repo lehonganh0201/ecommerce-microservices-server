@@ -2,7 +2,6 @@ package com.microservice.ecommerce.service.impl;
 
 import com.microservice.ecommerce.exception.BusinessException;
 import com.microservice.ecommerce.mapper.ProfileMapper;
-import com.microservice.ecommerce.model.entity.User;
 import com.microservice.ecommerce.model.entity.UserProfile;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.Status;
@@ -25,10 +24,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * ----------------------------------------------------------------------------
@@ -64,10 +61,7 @@ public class ProfileServiceImpl implements ProfileService {
             File directory = new File(BASE_DIRECTORY);
 
             if (!directory.exists()) {
-                log.warn("WARNING WRONG FILE PATH");
-                Path filePath = Paths.get(BASE_DIRECTORY);
-                log.error(filePath.toAbsolutePath());
-                return null;
+                directory.mkdir();
             }
 
             String originalFilename = StringUtils.cleanPath(request.avatar().getOriginalFilename());

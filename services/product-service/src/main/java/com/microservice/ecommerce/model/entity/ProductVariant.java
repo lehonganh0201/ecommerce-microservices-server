@@ -41,4 +41,8 @@ public class ProductVariant {
 
     @OneToMany(mappedBy = "productVariant", cascade = CascadeType.ALL, orphanRemoval = true)
     List<ProductAttribute> attributes = new ArrayList<>();
+
+    @OneToOne
+    @JoinColumn(name = "image_id")
+    ProductImage image;
 }

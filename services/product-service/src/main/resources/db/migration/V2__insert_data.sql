@@ -20,13 +20,13 @@ VALUES
 
 -- Thêm ảnh sản phẩm
 INSERT INTO product_images (id, image_url, product_id)
-SELECT gen_random_uuid(), '\resource\images\product-images\G03.jpg', id FROM products WHERE name = 'iPhone 14 Pro'
+SELECT gen_random_uuid(), '.\resource\images\product-images\G03.jpg', id FROM products WHERE name = 'iPhone 14 Pro'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\REGEN-GalaxyS23Ultra-Lavender-2.webp', id FROM products WHERE name = 'Samsung Galaxy S23 Ultra'
+SELECT gen_random_uuid(), '.\resource\images\product-images\REGEN-GalaxyS23Ultra-Lavender-2.webp', id FROM products WHERE name = 'Samsung Galaxy S23 Ultra'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\macbook-16.jpg', id FROM products WHERE name = 'MacBook Pro 16"'
+SELECT gen_random_uuid(), '.\resource\images\product-images\macbook-16.jpg', id FROM products WHERE name = 'MacBook Pro 16"'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\Dell-xps-9530-3.png', id FROM products WHERE name = 'Dell XPS 15';
+SELECT gen_random_uuid(), '.\resource\images\product-images\Dell-xps-9530-3.png', id FROM products WHERE name = 'Dell XPS 15';
 
 -- Thêm biến thể sản phẩm (variants)
 INSERT INTO variants (id, stock, price, product_id)

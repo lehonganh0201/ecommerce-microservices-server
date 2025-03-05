@@ -49,6 +49,7 @@ public class ProfileServiceImpl implements ProfileService {
     ProfileMapper profileMapper;
 
     private static final String BASE_DIRECTORY = "./resource/images/user-avatar/";
+    private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
 
     @Override
     public GlobalResponse<ProfileResponse> createProfile(ProfileRequest request, Jwt jwt) {
@@ -79,7 +80,7 @@ public class ProfileServiceImpl implements ProfileService {
 
             UserProfile profile = UserProfile.builder()
                     .user(user.get())
-                    .avatarUrl(filePath.toAbsolutePath().toString())
+                    .avatarUrl(filePath.toString())
                     .gender(request.gender())
                     .dateOfBirth(request.dateOfBirth())
                     .build();
@@ -90,7 +91,7 @@ public class ProfileServiceImpl implements ProfileService {
               Status.SUCCESS,
               new ProfileResponse(
                       profile.getId(),
-                      profile.getAvatarUrl(),
+                      ROOT_DIRECTORY + profile.getAvatarUrl(),
                       profile.isGender(),
                       profile.getDateOfBirth()
               )
@@ -103,14 +104,22 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public GlobalResponse<List<ProfileResponse>> findAllCurrentUserProfile(Jwt jwt) {
         List<UserProfile> profiles = profileRepository.findAllByUserId(jwt.getSubject());
-        var response = profiles.stream()
-                .map(profileMapper::toProfileResponse)
+        var responses = profiles.stream()
+                .map(profile -> {
+                    var response = new ProfileResponse(
+                            profile.getId(),
+                            ROOT_DIRECTORY + profile.getAvatarUrl(),
+                            profile.isGender(),
+                            profile.getDateOfBirth()
+                    );
+                    return response;
+                })
                 .collect(Collectors.toList()
                 );
 
         return new GlobalResponse<>(
                 Status.SUCCESS,
-                response
+                responses
         );
     }
 
@@ -131,7 +140,12 @@ public class ProfileServiceImpl implements ProfileService {
         if (flag) {
             return new GlobalResponse<>(
                     Status.SUCCESS,
-                    profileMapper.toProfileResponse(profile)
+                    new ProfileResponse(
+                            profile.getId(),
+                            ROOT_DIRECTORY + profile.getAvatarUrl(),
+                            profile.isGender(),
+                            profile.getDateOfBirth()
+                    )
             );
         }else {
             return new GlobalResponse<>(
@@ -204,7 +218,7 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         if (!request.avatar().isEmpty()) {
-            profile.setAvatarUrl(filePath.toAbsolutePath().toString());
+            profile.setAvatarUrl(filePath.toString());
         }
 
         profile = profileRepository.save(profile);
@@ -213,7 +227,7 @@ public class ProfileServiceImpl implements ProfileService {
                 Status.SUCCESS,
                 new ProfileResponse(
                         profile.getId(),
-                        profile.getAvatarUrl(),
+                        ROOT_DIRECTORY + profile.getAvatarUrl(),
                         profile.isGender(),
                         profile.getDateOfBirth()
                 )

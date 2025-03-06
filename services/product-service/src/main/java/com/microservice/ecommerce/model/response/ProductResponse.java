@@ -28,7 +28,7 @@ public class ProductResponse {
     String description;
     Double price;
     Integer stock;
-    String createdBy;
+    String creatorName;
     LocalDateTime createdDate;
     List<ProductVariantResponse> variants;
     List<ProductImageResponse> images;

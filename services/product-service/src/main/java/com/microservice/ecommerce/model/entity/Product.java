@@ -67,6 +67,9 @@ public class Product {
     @Column(updatable = false, nullable = false)
     LocalDateTime createdDate;
 
+    @Column(nullable = false, updatable = false)
+    String creatorName;
+
     @LastModifiedDate
     @Column(nullable = false)
     LocalDateTime lastModifiedDate;

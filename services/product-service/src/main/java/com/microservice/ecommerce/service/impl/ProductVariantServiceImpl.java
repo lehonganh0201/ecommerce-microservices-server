@@ -62,7 +62,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     FileUtil fileUtil;
 
-    private static final String BASE_DIRECTORY = "/resource/images/variant-images/";
+    private static final String BASE_DIRECTORY = "resource/images/variant-images/";
     private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
 
     @Override
@@ -74,7 +74,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!product.getCreatedBy().equals(jwt.getClaimAsString("name"))) {
+            if (!product.getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
                 throw new BusinessException("You cannot update product from another store.");
             }
         } else {
@@ -137,7 +137,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("name"))) {
+            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
                 throw new BusinessException("You cannot update product from another store.");
             }
         } else {
@@ -202,7 +202,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("name"))) {
+            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
                 throw new BusinessException("You cannot update product from another store.");
             }
         } else {
@@ -225,7 +225,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("name"))) {
+            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
                 throw new BusinessException("You cannot update product from another store.");
             }
         } else {
@@ -261,7 +261,11 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         response.setImages(product.getImages().stream()
                 .map(productImage -> {
                     var imageResponse = imageMapper.toProductImageResponse(productImage);
-                    imageResponse.setImageUrl(ROOT_DIRECTORY + imageResponse.getImageUrl());
+
+                    if (productImage.getImageUrl() != null){
+                        imageResponse.setImageUrl(ROOT_DIRECTORY + '\\' + imageResponse.getImageUrl());
+                    }
+
 
                     return imageResponse;
                 })
@@ -272,7 +276,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                     ProductVariantResponse variantResponse = variantMapper.toProductVariantResponse(productVariant);
 
                     if (productVariant.getProduct() != null) {
-                        variantResponse.setImageUrl(ROOT_DIRECTORY + productVariant.getImageUrl());
+                        variantResponse.setImageUrl(ROOT_DIRECTORY + '\\' + productVariant.getImageUrl());
                     }
 
                     variantResponse.setAttributes(

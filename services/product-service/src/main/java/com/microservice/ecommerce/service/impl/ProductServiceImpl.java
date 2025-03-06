@@ -70,11 +70,12 @@ public class ProductServiceImpl implements ProductService {
 
     FileUtil fileUtil;
 
-    private static final String BASE_DIRECTORY = "/resource/images/product-images/";
+    private static final String BASE_DIRECTORY = "resource/images/product-images/";
     private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
 
     @Override
     public GlobalResponse<ProductResponse> createProduct(ProductRequest request) {
+        String creatorName = null;
         try {
             var authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -82,6 +83,7 @@ public class ProductServiceImpl implements ProductService {
 
             if (authentication instanceof JwtAuthenticationToken authenticationToken) {
                 token += authenticationToken.getToken().getTokenValue();
+                creatorName = (String) ((JwtAuthenticationToken) authentication).getTokenAttributes().get("name");
             }
 
             userServiceClient.checkUserProfile(token);
@@ -95,6 +97,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = productMapper.toProduct(request);
         product.setCategory(category);
         product.setIsActive(true);
+        product.setCreatorName(creatorName);
 
         List<ProductImage> images = new ArrayList<>();
 
@@ -122,7 +125,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductImageResponse> imageResponses = product.getImages().stream()
                 .map(productImage -> ProductImageResponse.builder()
                         .id(productImage.getId())
-                        .imageUrl(ROOT_DIRECTORY + productImage.getImageUrl())
+                        .imageUrl(ROOT_DIRECTORY + '\\' + productImage.getImageUrl())
                         .build())
                 .collect(Collectors.toList());
 
@@ -132,7 +135,7 @@ public class ProductServiceImpl implements ProductService {
                 .description(product.getDescription())
                 .price(product.getPrice())
                 .stock(product.getStock())
-                .createdBy(product.getCreatedBy())
+                .creatorName(product.getCreatorName())
                 .createdDate(product.getCreatedDate())
                 .images(imageResponses)
                 .build();
@@ -202,7 +205,10 @@ public class ProductServiceImpl implements ProductService {
         response.setImages(product.getImages().stream()
                 .map(productImage -> {
                     var imageResponse = imageMapper.toProductImageResponse(productImage);
-                    imageResponse.setImageUrl(ROOT_DIRECTORY + imageResponse.getImageUrl());
+
+                    if (imageResponse.getImageUrl() != null) {
+                        imageResponse.setImageUrl(ROOT_DIRECTORY + '\\' + imageResponse.getImageUrl());
+                    }
 
                     return imageResponse;
                 })
@@ -212,8 +218,8 @@ public class ProductServiceImpl implements ProductService {
                 .map(variant -> {
                     ProductVariantResponse variantResponse = variantMapper.toProductVariantResponse(variant);
 
-                    if (variant.getProduct() != null) {
-                        variantResponse.setImageUrl(ROOT_DIRECTORY + variant.getImageUrl());
+                    if (variant.getImageUrl() != null) {
+                        variantResponse.setImageUrl(ROOT_DIRECTORY + '\\' + variant.getImageUrl());
                     }
 
                     variantResponse.setAttributes(
@@ -247,7 +253,7 @@ public class ProductServiceImpl implements ProductService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!product.getCreatedBy().equals(jwt.getClaimAsString("name"))) {
+            if (!product.getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
                 throw new BusinessException("You cannot update product from another store.");
             }
         } else {
@@ -295,7 +301,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductImageResponse> imageResponses = product.getImages().stream()
                 .map(productImage -> ProductImageResponse.builder()
                         .id(productImage.getId())
-                        .imageUrl(ROOT_DIRECTORY + productImage.getImageUrl())
+                        .imageUrl(ROOT_DIRECTORY + '\\' + productImage.getImageUrl())
                         .build())
                 .collect(Collectors.toList());
 
@@ -305,7 +311,7 @@ public class ProductServiceImpl implements ProductService {
                 .description(product.getDescription())
                 .price(product.getPrice())
                 .stock(product.getStock())
-                .createdBy(product.getCreatedBy())
+                .creatorName(product.getCreatorName())
                 .createdDate(product.getCreatedDate())
                 .images(imageResponses)
                 .build();
@@ -322,7 +328,7 @@ public class ProductServiceImpl implements ProductService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!product.getCreatedBy().equals(jwt.getClaimAsString("name"))) {
+            if (!product.getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
                 throw new BusinessException("You cannot update product from another store.");
             }
         } else {
@@ -331,44 +337,44 @@ public class ProductServiceImpl implements ProductService {
 
         List<ProductImage> newImages = new ArrayList<>();
 
-            for (var image : images) {
-                if (!image.isEmpty()) {
-                    String filePath = fileUtil.saveFile(image, BASE_DIRECTORY);
+        for (var image : images) {
+            if (!image.isEmpty()) {
+                String filePath = fileUtil.saveFile(image, BASE_DIRECTORY);
 
-                    if (filePath == null) {
-                        throw new BusinessException("Cannot upload file, please try again");
-                    }
-
-                    ProductImage productImage = ProductImage.builder()
-                            .imageUrl(filePath)
-                            .product(product)
-                            .build();
-
-                    newImages.add(productImage);
+                if (filePath == null) {
+                    throw new BusinessException("Cannot upload file, please try again");
                 }
+
+                ProductImage productImage = ProductImage.builder()
+                        .imageUrl(filePath)
+                        .product(product)
+                        .build();
+
+                newImages.add(productImage);
             }
+        }
 
-            product.getImages().addAll(newImages);
-            productRepository.save(product);
+        product.getImages().addAll(newImages);
+        productRepository.save(product);
 
-            List<ProductImageResponse> imageResponses = product.getImages().stream()
-                    .map(productImage -> ProductImageResponse.builder()
-                            .id(productImage.getId())
-                            .imageUrl(ROOT_DIRECTORY + productImage.getImageUrl())
-                            .build())
-                    .collect(Collectors.toList());
+        List<ProductImageResponse> imageResponses = product.getImages().stream()
+                .map(productImage -> ProductImageResponse.builder()
+                        .id(productImage.getId())
+                        .imageUrl(ROOT_DIRECTORY + '\\' + productImage.getImageUrl())
+                        .build())
+                .collect(Collectors.toList());
 
-            ProductResponse response = ProductResponse.builder()
-                    .id(product.getId())
-                    .name(product.getName())
-                    .description(product.getDescription())
-                    .price(product.getPrice())
-                    .stock(product.getStock())
-                    .createdBy(product.getCreatedBy())
-                    .createdDate(product.getCreatedDate())
-                    .images(imageResponses)
-                    .build();
+        ProductResponse response = ProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .stock(product.getStock())
+                .creatorName(product.getCreatorName())
+                .createdDate(product.getCreatedDate())
+                .images(imageResponses)
+                .build();
 
-            return new GlobalResponse<>(Status.SUCCESS, response);
+        return new GlobalResponse<>(Status.SUCCESS, response);
     }
 }

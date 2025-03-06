@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS products
   price DOUBLE PRECISION NOT NULL,
   stock INTEGER,
   created_by VARCHAR(255) NOT NULL,
+  creator_name VARCHAR(255) NOT NULL,
   is_active BOOLEAN DEFAULT TRUE,
   category_id UUID,
   created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -35,6 +36,7 @@ CREATE TABLE IF NOT EXISTS variants
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     stock INTEGER,
     price DOUBLE PRECISION,
+    image_url TEXT,
     product_id UUID NOT NULL,
     CONSTRAINT fk_variant_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );

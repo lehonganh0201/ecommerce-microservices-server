@@ -17,9 +17,9 @@ import com.microservice.ecommerce.model.response.ProductImageResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import com.microservice.ecommerce.model.response.ProductVariantResponse;
 import com.microservice.ecommerce.repository.CategoryRepository;
-import com.microservice.ecommerce.repository.ProductImageRepository;
 import com.microservice.ecommerce.repository.ProductRepository;
 import com.microservice.ecommerce.service.ProductService;
+import com.microservice.ecommerce.util.FileUtil;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -36,14 +36,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -61,7 +60,6 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductServiceImpl implements ProductService {
     ProductRepository productRepository;
-    ProductImageRepository imageRepository;
     CategoryRepository categoryRepository;
 
     ProductMapper productMapper;
@@ -69,6 +67,8 @@ public class ProductServiceImpl implements ProductService {
     ProductVariantMapper variantMapper;
 
     UserServiceClient userServiceClient;
+
+    FileUtil fileUtil;
 
     private static final String BASE_DIRECTORY = "/resource/images/product-images/";
     private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
@@ -85,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
             }
 
             userServiceClient.checkUserProfile(token);
-        }catch (FeignException.Unauthorized ex) {
+        } catch (FeignException.Unauthorized ex) {
             throw new BusinessException("User must have a profile before creating a product.");
         }
 
@@ -98,57 +98,46 @@ public class ProductServiceImpl implements ProductService {
 
         List<ProductImage> images = new ArrayList<>();
 
-        try {
-            File directory = new File(BASE_DIRECTORY);
-            if (!directory.exists()) {
-                directory.mkdirs();
-            }
+        for (var image : request.images()) {
+            if (!image.isEmpty()) {
+                String filePath = fileUtil.saveFile(image, BASE_DIRECTORY);
 
-            for (var image : request.images()) {
-                if (!image.isEmpty()) {
-                    String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
-                    String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-                    String newFileName = UUID.randomUUID() + fileExtension;
-                    Path filePath = Paths.get(BASE_DIRECTORY + newFileName);
-
-                    Files.write(filePath, image.getBytes());
-
-                    ProductImage productImage = ProductImage.builder()
-                            .imageUrl(filePath.toString())
-                            .product(product)
-                            .build();
-
-                    images.add(productImage);
+                if (filePath == null) {
+                    throw new BusinessException("Cannot upload file, please try again");
                 }
+
+                ProductImage productImage = ProductImage.builder()
+                        .imageUrl(filePath)
+                        .product(product)
+                        .build();
+
+                images.add(productImage);
             }
-
-            product.setImages(images);
-
-            product = productRepository.save(product);
-
-            List<ProductImageResponse> imageResponses = product.getImages().stream()
-                    .map(productImage -> ProductImageResponse.builder()
-                            .id(productImage.getId())
-                            .imageUrl(ROOT_DIRECTORY + productImage.getImageUrl())
-                            .build())
-                    .collect(Collectors.toList());
-
-            ProductResponse response = ProductResponse.builder()
-                    .id(product.getId())
-                    .name(product.getName())
-                    .description(product.getDescription())
-                    .price(product.getPrice())
-                    .stock(product.getStock())
-                    .createdBy(product.getCreatedBy())
-                    .createdDate(product.getCreatedDate())
-                    .images(imageResponses)
-                    .build();
-
-            return new GlobalResponse<>(Status.SUCCESS, response);
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-            throw new RuntimeException("Không thể tạo sản phẩm, vui lòng thử lại sau.");
         }
+
+        product.setImages(images);
+
+        product = productRepository.save(product);
+
+        List<ProductImageResponse> imageResponses = product.getImages().stream()
+                .map(productImage -> ProductImageResponse.builder()
+                        .id(productImage.getId())
+                        .imageUrl(ROOT_DIRECTORY + productImage.getImageUrl())
+                        .build())
+                .collect(Collectors.toList());
+
+        ProductResponse response = ProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .stock(product.getStock())
+                .createdBy(product.getCreatedBy())
+                .createdDate(product.getCreatedDate())
+                .images(imageResponses)
+                .build();
+
+        return new GlobalResponse<>(Status.SUCCESS, response);
     }
 
 
@@ -175,17 +164,17 @@ public class ProductServiceImpl implements ProductService {
                 pageable);
 
         List<ProductResponse> responses = productPage.stream()
-            .map(product -> {
-                var response = productMapper.toProductResponse(product);
+                .map(product -> {
+                    var response = productMapper.toProductResponse(product);
 
-                List<ProductImageResponse> imageResponses = product.getImages().stream()
-                        .map(imageMapper::toProductImageResponse)
-                        .collect(Collectors.toList());
+                    List<ProductImageResponse> imageResponses = product.getImages().stream()
+                            .map(imageMapper::toProductImageResponse)
+                            .collect(Collectors.toList());
 
-                response.setImages(imageResponses);
-                return response;
-            })
-            .collect(Collectors.toList());
+                    response.setImages(imageResponses);
+                    return response;
+                })
+                .collect(Collectors.toList());
 
         return new GlobalResponse<>(
                 Status.SUCCESS,
@@ -222,6 +211,11 @@ public class ProductServiceImpl implements ProductService {
         response.setVariants(product.getVariants().stream()
                 .map(variant -> {
                     ProductVariantResponse variantResponse = variantMapper.toProductVariantResponse(variant);
+
+                    if (variant.getProduct() != null) {
+                        variantResponse.setImageUrl(ROOT_DIRECTORY + variant.getImageUrl());
+                    }
+
                     variantResponse.setAttributes(
                             variant.getAttributes().stream()
                                     .map(attribute -> {
@@ -256,7 +250,7 @@ public class ProductServiceImpl implements ProductService {
             if (!product.getCreatedBy().equals(jwt.getClaimAsString("name"))) {
                 throw new BusinessException("You cannot update product from another store.");
             }
-        }else{
+        } else {
             throw new BusinessException("You authentication is not available, please try again.");
         }
 
@@ -275,35 +269,25 @@ public class ProductServiceImpl implements ProductService {
             }
 
             List<ProductImage> images = new ArrayList<>();
-            try {
-                File directory = new File(BASE_DIRECTORY);
-                if (!directory.exists()) {
-                    directory.mkdirs();
-                }
 
-                for (var image : request.images()) {
-                    if (!image.isEmpty()) {
-                        String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
-                        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-                        String newFileName = UUID.randomUUID() + fileExtension;
-                        Path filePath = Paths.get(BASE_DIRECTORY + newFileName);
+            for (var image : request.images()) {
+                if (!image.isEmpty()) {
+                    String filePath = fileUtil.saveFile(image, BASE_DIRECTORY);
 
-                        Files.write(filePath, image.getBytes());
-
-                        ProductImage productImage = ProductImage.builder()
-                                .imageUrl(filePath.toString())
-                                .product(product)
-                                .build();
-
-                        images.add(productImage);
+                    if (filePath == null) {
+                        throw new BusinessException("Cannot upload file, please try again");
                     }
-                }
 
-                product.setImages(images);
-            } catch (Exception ex) {
-                log.error(ex.getMessage());
-                throw new RuntimeException("Không thể cập nhật ảnh sản phẩm, vui lòng thử lại sau.");
+                    ProductImage productImage = ProductImage.builder()
+                            .imageUrl(filePath)
+                            .product(product)
+                            .build();
+
+                    images.add(productImage);
+                }
             }
+
+            product.setImages(images);
         }
 
         product = productRepository.save(product);
@@ -341,29 +325,22 @@ public class ProductServiceImpl implements ProductService {
             if (!product.getCreatedBy().equals(jwt.getClaimAsString("name"))) {
                 throw new BusinessException("You cannot update product from another store.");
             }
-        }else{
+        } else {
             throw new BusinessException("You authentication is not available, please try again.");
         }
 
         List<ProductImage> newImages = new ArrayList<>();
 
-        try {
-            File directory = new File(BASE_DIRECTORY);
-            if (!directory.exists()) {
-                directory.mkdirs();
-            }
-
             for (var image : images) {
                 if (!image.isEmpty()) {
-                    String originalFilename = StringUtils.cleanPath(image.getOriginalFilename());
-                    String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-                    String newFileName = UUID.randomUUID() + fileExtension;
-                    Path filePath = Paths.get(BASE_DIRECTORY + newFileName);
+                    String filePath = fileUtil.saveFile(image, BASE_DIRECTORY);
 
-                    Files.write(filePath, image.getBytes());
+                    if (filePath == null) {
+                        throw new BusinessException("Cannot upload file, please try again");
+                    }
 
                     ProductImage productImage = ProductImage.builder()
-                            .imageUrl(filePath.toString())
+                            .imageUrl(filePath)
                             .product(product)
                             .build();
 
@@ -393,12 +370,5 @@ public class ProductServiceImpl implements ProductService {
                     .build();
 
             return new GlobalResponse<>(Status.SUCCESS, response);
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-            throw new RuntimeException("Không thể thêm ảnh, vui lòng thử lại sau.");
-        }
     }
-
-
-
 }

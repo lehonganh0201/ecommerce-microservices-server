@@ -30,5 +30,5 @@ public class ProductVariantResponse {
 
     List<ProductAttributeResponse> attributes;
 
-    ProductImageResponse image;
+    String imageUrl;
 }

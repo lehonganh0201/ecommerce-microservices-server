@@ -14,5 +14,8 @@ public interface Endpoint {
     String PREFIX = "/api/v1";
     public interface Auth {
         String PREFIX = Endpoint.PREFIX + "/auths";
+        String REGISTER = "/register";
+        String LOGIN = "/login";
+        String FORGOT_PASSWORD = "/forgot-password";
     }
 }

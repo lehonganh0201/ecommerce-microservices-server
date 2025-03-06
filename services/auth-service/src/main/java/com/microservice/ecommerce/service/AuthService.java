@@ -19,4 +19,6 @@ public interface AuthService {
     GlobalResponse<String> register(AuthRequest request);
 
     GlobalResponse<TokenResponse> login(LoginRequest request);
+
+    GlobalResponse<String> forgotPassword(String username);
 }

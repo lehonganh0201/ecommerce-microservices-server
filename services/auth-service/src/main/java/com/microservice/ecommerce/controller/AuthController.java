@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
@@ -32,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     AuthService authService;
 
-    @PostMapping("/register")
+    @PostMapping(Endpoint.Auth.REGISTER)
     public ResponseEntity<GlobalResponse<String>> register(
             @RequestBody @Valid AuthRequest request
     ) {
@@ -40,11 +42,17 @@ public class AuthController {
                 .ok(authService.register(request));
     }
 
-    @PostMapping("/login")
+    @PostMapping(Endpoint.Auth.LOGIN)
     public ResponseEntity<GlobalResponse<TokenResponse>> login(
             @RequestBody @Valid LoginRequest request
     ) {
         return ResponseEntity
                 .ok(authService.login(request));
+    }
+
+    @PostMapping(Endpoint.Auth.FORGOT_PASSWORD)
+    public ResponseEntity<GlobalResponse<String>> forgotPassword(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        return ResponseEntity.ok(authService.forgotPassword(username));
     }
 }

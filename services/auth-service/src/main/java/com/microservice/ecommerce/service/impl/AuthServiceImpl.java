@@ -8,6 +8,7 @@ import com.microservice.ecommerce.model.request.AuthRequest;
 import com.microservice.ecommerce.model.request.LoginRequest;
 import com.microservice.ecommerce.model.response.TokenResponse;
 import com.microservice.ecommerce.service.AuthService;
+import com.microservice.ecommerce.util.EmailUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -45,6 +46,8 @@ public class AuthServiceImpl implements AuthService {
     RestTemplate restTemplate;
     KeycloakProperties keycloakProperties;
 
+    EmailUtil emailUtil;
+
     final String BEARER_PREFIX = "Bearer ";
 
 
@@ -62,6 +65,7 @@ public class AuthServiceImpl implements AuthService {
         user.put("firstName", request.firstName());
         user.put("lastName", request.lastName());
         user.put("email", request.email());
+        user.put("emailVerified", false);
         user.put("credentials", List.of(Map.of(
                 "type", "password",
                 "value", request.password(),
@@ -77,6 +81,10 @@ public class AuthServiceImpl implements AuthService {
                     "Cannot register, please try again"
             );
         }
+
+        String userId = getUserId(request.username());
+
+        emailUtil.sendVerificationEmail(userId);
 
         return new GlobalResponse<>(
                 Status.SUCCESS,
@@ -118,6 +126,15 @@ public class AuthServiceImpl implements AuthService {
 
     }
 
+    @Override
+    public GlobalResponse<String> forgotPassword(String username) {
+        String userId = getUserId(username);
+
+        emailUtil.sendResetPasswordEmail(userId);
+
+        return new GlobalResponse<>(Status.SUCCESS, "Password reset email has been sent. Please check your email.");
+    }
+
     private String getAdminToken() {
         final String adminUrl = keycloakProperties.serverUrl() + "/realms/master/protocol/openid-connect/token";
         HttpHeaders headers = new HttpHeaders();
@@ -135,4 +152,19 @@ public class AuthServiceImpl implements AuthService {
         return (String) response.getBody().get("access_token");
     }
 
+    private String getUserId(String username) {
+        final String url = keycloakProperties.serverUrl() + "/admin/realms/" + keycloakProperties.realm() + "/users?username=" + username;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(AUTHORIZATION, BEARER_PREFIX + getAdminToken());
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        ResponseEntity<List> response = restTemplate.exchange(url, HttpMethod.GET, entity, List.class);
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null && !response.getBody().isEmpty()) {
+            Map<String, Object> user = (Map<String, Object>) response.getBody().get(0);
+            return (String) user.get("id");
+        }
+        throw new RuntimeException("User not found in Keycloak");
+    }
 }

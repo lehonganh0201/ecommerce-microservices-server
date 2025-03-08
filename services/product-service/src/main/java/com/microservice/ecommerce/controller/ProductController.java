@@ -51,10 +51,11 @@ public class ProductController {
             @RequestParam(name = "searchKeyword", required = false) String searchKeyword,
             @RequestParam(name = "category", required = false) String category,
             @RequestParam(name = "minPrice", required = false) Double minPrice,
-            @RequestParam(name = "maxPrice", required = false) Double maxPrice
+            @RequestParam(name = "maxPrice", required = false) Double maxPrice,
+            @RequestParam(name = "status", required = false, defaultValue = "true") boolean status
     ) {
         return ResponseEntity
-                .ok(productService.findAllProducts(sortedBy, sortDirection, page, size, searchKeyword, category, minPrice, maxPrice));
+                .ok(productService.findAllProducts(sortedBy, sortDirection, page, size, searchKeyword, category, minPrice, maxPrice, status));
     }
 
     @GetMapping(Endpoint.Product.PRODUCT_ID)
@@ -63,6 +64,14 @@ public class ProductController {
     ) {
         return ResponseEntity
                 .ok(productService.getProductById(productId));
+    }
+
+    @GetMapping(Endpoint.Product.SEARCH)
+    public ResponseEntity<GlobalResponse<List<ProductResponse>>> findByKeyword(
+            @RequestParam(name = "keyword") String keyword
+    ) {
+        return ResponseEntity
+                .ok(productService.searchByKeyword(keyword));
     }
 
     @PutMapping(Endpoint.Product.PRODUCT_ID)

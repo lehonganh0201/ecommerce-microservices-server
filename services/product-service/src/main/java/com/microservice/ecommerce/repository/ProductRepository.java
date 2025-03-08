@@ -27,12 +27,14 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             "(COALESCE(:searchKeyword, '') = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :searchKeyword, '%'))) AND " +
             "(COALESCE(:category, '') = '' OR LOWER(CAST(c.name AS string)) = LOWER(:category)) AND " +
             "(COALESCE(:minPrice, 0) = 0 OR p.price >= :minPrice) AND " +
-            "(COALESCE(:maxPrice, 0) = 0 OR p.price <= :maxPrice)")
+            "(COALESCE(:maxPrice, 0) = 0 OR p.price <= :maxPrice) AND " +
+            "p.isActive = :status")
     Page<Product> findAllWithFilters(
             @Param("searchKeyword") String keyword,
             @Param("category") String category,
             @Param("minPrice") Double minPrice,
             @Param("maxPrice") Double maxPrice,
+            @Param("status") Boolean status,
             Pageable pageable
     );
 }

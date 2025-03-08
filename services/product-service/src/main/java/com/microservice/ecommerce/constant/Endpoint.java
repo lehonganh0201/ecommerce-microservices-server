@@ -17,6 +17,7 @@ public interface Endpoint {
         String PREFIX = Endpoint.PREFIX + "/products";
         String PRODUCT_ID = "/{productId}";
         String UPLOAD = PRODUCT_ID + "/upload";
+        String SEARCH = "/search";
     }
 
     public interface Category {

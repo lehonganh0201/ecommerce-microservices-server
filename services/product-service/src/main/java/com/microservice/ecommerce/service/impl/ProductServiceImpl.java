@@ -1,7 +1,9 @@
 package com.microservice.ecommerce.service.impl;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
 import com.microservice.ecommerce.client.UserServiceClient;
 import com.microservice.ecommerce.exception.BusinessException;
+import com.microservice.ecommerce.model.document.ProductDocument;
 import com.microservice.ecommerce.model.entity.Category;
 import com.microservice.ecommerce.model.entity.Product;
 import com.microservice.ecommerce.model.entity.ProductImage;
@@ -17,6 +19,7 @@ import com.microservice.ecommerce.model.response.ProductImageResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import com.microservice.ecommerce.model.response.ProductVariantResponse;
 import com.microservice.ecommerce.repository.CategoryRepository;
+import com.microservice.ecommerce.repository.ProductDocumentRepository;
 import com.microservice.ecommerce.repository.ProductRepository;
 import com.microservice.ecommerce.service.ProductService;
 import com.microservice.ecommerce.util.FileUtil;
@@ -31,6 +34,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -39,10 +47,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -61,6 +66,7 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
     ProductRepository productRepository;
     CategoryRepository categoryRepository;
+    ProductDocumentRepository productDocumentRepository;
 
     ProductMapper productMapper;
     ProductImageMapper imageMapper;
@@ -69,6 +75,8 @@ public class ProductServiceImpl implements ProductService {
     UserServiceClient userServiceClient;
 
     FileUtil fileUtil;
+
+    ElasticsearchOperations elasticsearchOperations;
 
     private static final String BASE_DIRECTORY = "resource/images/product-images/";
     private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
@@ -122,6 +130,8 @@ public class ProductServiceImpl implements ProductService {
 
         product = productRepository.save(product);
 
+        syncProduct(product);
+
         List<ProductImageResponse> imageResponses = product.getImages().stream()
                 .map(productImage -> ProductImageResponse.builder()
                         .id(productImage.getId())
@@ -153,7 +163,8 @@ public class ProductServiceImpl implements ProductService {
             String searchKeyword,
             String category,
             Double minPrice,
-            Double maxPrice) {
+            Double maxPrice,
+            boolean status) {
         Sort sort = Sort.by(sortDirection.equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC,
                 sortedBy != null ? sortedBy : "id");
 
@@ -164,6 +175,7 @@ public class ProductServiceImpl implements ProductService {
                 category,
                 minPrice,
                 maxPrice,
+                status,
                 pageable);
 
         List<ProductResponse> responses = productPage.stream()
@@ -376,5 +388,48 @@ public class ProductServiceImpl implements ProductService {
                 .build();
 
         return new GlobalResponse<>(Status.SUCCESS, response);
+    }
+
+    @Override
+    public GlobalResponse<List<ProductResponse>> searchByKeyword(String keyword) {
+        Criteria criteria = new Criteria("name").fuzzy(keyword)
+                .or(new Criteria("description").fuzzy(keyword));
+
+        CriteriaQuery searchQuery = new CriteriaQuery(criteria);
+
+        List<ProductDocument> products = elasticsearchOperations.search(searchQuery, ProductDocument.class)
+                .stream()
+                .map(SearchHit::getContent)
+                .toList();
+
+        List<ProductResponse> productResponses = products.stream()
+                .map(product -> new ProductResponse(
+                        product.getId(),
+                        product.getName(),
+                        product.getDescription(),
+                        product.getPrice(),
+                        product.getStock(),
+                        null,
+                        null,
+                        null,
+                        null))
+                .toList();
+
+        return new GlobalResponse<>(Status.SUCCESS, productResponses);
+    }
+
+
+    private void syncProduct(Product product) {
+        ProductDocument document = ProductDocument.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .stock(product.getStock())
+                .creatorName(product.getCreatorName())
+                .isActive(product.getIsActive())
+                .build();
+
+        productDocumentRepository.save(document);
     }
 }

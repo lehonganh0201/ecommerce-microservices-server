@@ -2,6 +2,7 @@ package com.microservice.ecommerce.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -26,6 +27,9 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/eureka/**").permitAll()
                         .pathMatchers("/api/v1/auths/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/v1/products/**",
+                                "/api/v1/categories/**",
+                                "/api/v1/variants/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()));

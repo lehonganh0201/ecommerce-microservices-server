@@ -87,6 +87,8 @@ public class OrderServiceImpl implements OrderService {
 
         order = orderRepository.save(order);
 
+        productClient.updateStock(request.items());
+
         return new GlobalResponse<>(
                 Status.SUCCESS,
                 new OrderResponse(

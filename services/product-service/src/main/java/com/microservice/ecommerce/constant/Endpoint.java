@@ -29,5 +29,8 @@ public interface Endpoint {
         String PREFIX = Endpoint.PREFIX + "/variants";
         String VARIANT_ID = "/{variantId}";
         String UPLOAD = VARIANT_ID + "/upload";
+        String CHECK_STOCK = "/check-stock";
+        String UPDATE_STOCK = "/update-stock";
+        String GET_PRICE = "/get-prices";
     }
 }

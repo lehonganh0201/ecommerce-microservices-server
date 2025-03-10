@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS products
   name VARCHAR(255) NOT NULL,
   description TEXT,
   price DOUBLE PRECISION NOT NULL,
-  stock INTEGER,
   created_by VARCHAR(255) NOT NULL,
   creator_name VARCHAR(255) NOT NULL,
   is_active BOOLEAN DEFAULT TRUE,

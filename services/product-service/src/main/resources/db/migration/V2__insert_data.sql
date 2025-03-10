@@ -8,15 +8,15 @@ INSERT INTO categories (id, name, description) VALUES
 (gen_random_uuid(), 'Âm thanh', 'Loa, tai nghe và thiết bị âm thanh');
 
 -- Thêm sản phẩm
-INSERT INTO products (id, name, description, price, stock, category_id,creator_name, created_by)
+INSERT INTO products (id, name, description, price, category_id,creator_name, created_by)
 VALUES
-(gen_random_uuid(), 'iPhone 14 Pro', 'Điện thoại Apple cao cấp', 1099.99, 50, (SELECT id FROM categories WHERE name = 'Điện thoại'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
-(gen_random_uuid(), 'Samsung Galaxy S23 Ultra', 'Điện thoại Samsung flagship', 1199.99, 40, (SELECT id FROM categories WHERE name = 'Điện thoại'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
-(gen_random_uuid(), 'MacBook Pro 16"', 'Laptop mạnh mẽ từ Apple', 2399.99, 30, (SELECT id FROM categories WHERE name = 'Laptop'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
-(gen_random_uuid(), 'Dell XPS 15', 'Laptop Dell hiệu năng cao', 1899.99, 20, (SELECT id FROM categories WHERE name = 'Laptop'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
-(gen_random_uuid(), 'iPad Pro 12.9"', 'Máy tính bảng mạnh mẽ từ Apple', 1299.99, 25, (SELECT id FROM categories WHERE name = 'Tablet'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
-(gen_random_uuid(), 'Apple Watch Ultra', 'Đồng hồ thông minh cao cấp từ Apple', 799.99, 15, (SELECT id FROM categories WHERE name = 'Smartwatch'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
-(gen_random_uuid(), 'Sony WH-1000XM5', 'Tai nghe chống ồn hàng đầu từ Sony', 399.99, 35, (SELECT id FROM categories WHERE name = 'Âm thanh'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916');
+(gen_random_uuid(), 'iPhone 14 Pro', 'Điện thoại Apple cao cấp', 1099.99, (SELECT id FROM categories WHERE name = 'Điện thoại'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
+(gen_random_uuid(), 'Samsung Galaxy S23 Ultra', 'Điện thoại Samsung flagship', 1199.99, (SELECT id FROM categories WHERE name = 'Điện thoại'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
+(gen_random_uuid(), 'MacBook Pro 16"', 'Laptop mạnh mẽ từ Apple', 2399.99, (SELECT id FROM categories WHERE name = 'Laptop'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
+(gen_random_uuid(), 'Dell XPS 15', 'Laptop Dell hiệu năng cao', 1899.99, (SELECT id FROM categories WHERE name = 'Laptop'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
+(gen_random_uuid(), 'iPad Pro 12.9"', 'Máy tính bảng mạnh mẽ từ Apple', 1299.99, (SELECT id FROM categories WHERE name = 'Tablet'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
+(gen_random_uuid(), 'Apple Watch Ultra', 'Đồng hồ thông minh cao cấp từ Apple', 799.99, (SELECT id FROM categories WHERE name = 'Smartwatch'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916'),
+(gen_random_uuid(), 'Sony WH-1000XM5', 'Tai nghe chống ồn hàng đầu từ Sony', 399.99, (SELECT id FROM categories WHERE name = 'Âm thanh'), 'Anh Le', '86bddf60-eae1-4910-8e9c-1e74df2b5916');
 
 -- Thêm ảnh sản phẩm
 INSERT INTO product_images (id, image_url, product_id)

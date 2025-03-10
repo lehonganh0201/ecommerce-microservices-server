@@ -2,7 +2,9 @@ package com.microservice.ecommerce.controller;
 
 import com.microservice.ecommerce.constant.Endpoint;
 import com.microservice.ecommerce.model.global.GlobalResponse;
+import com.microservice.ecommerce.model.request.OrderItemRequest;
 import com.microservice.ecommerce.model.request.ProductVariantRequest;
+import com.microservice.ecommerce.model.response.ProductPriceResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import com.microservice.ecommerce.service.ProductVariantService;
 import jakarta.validation.Valid;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -63,5 +66,29 @@ public class ProductVariantController {
     ) {
         return ResponseEntity
                 .ok(variantService.uploadImageToVariant(variantId, image));
+    }
+
+    @GetMapping(Endpoint.ProductVariant.CHECK_STOCK)
+    public ResponseEntity<Boolean> checkStock(
+            @RequestBody @Valid List<OrderItemRequest> requests
+    ) {
+        return ResponseEntity
+                .ok(variantService.checkStock(requests));
+    }
+
+    @GetMapping(Endpoint.ProductVariant.GET_PRICE)
+    public ResponseEntity<List<ProductPriceResponse>> getPrices(
+            @RequestBody List<UUID> variantIds
+    ) {
+        return ResponseEntity
+                .ok(variantService.getPrices(variantIds));
+    }
+
+    @PutMapping(Endpoint.ProductVariant.UPDATE_STOCK)
+    public ResponseEntity<Void> updateStock(
+            @RequestBody @Valid List<OrderItemRequest> requests
+    ) {
+        return ResponseEntity
+                .ok(variantService.updateStock(requests));
     }
 }

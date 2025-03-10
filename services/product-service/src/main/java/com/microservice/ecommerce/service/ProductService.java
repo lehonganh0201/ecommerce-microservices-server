@@ -4,7 +4,6 @@ import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.PageResponse;
 import com.microservice.ecommerce.model.request.ProductRequest;
 import com.microservice.ecommerce.model.response.ProductResponse;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

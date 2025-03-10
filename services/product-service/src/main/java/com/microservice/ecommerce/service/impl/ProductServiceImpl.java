@@ -1,6 +1,5 @@
 package com.microservice.ecommerce.service.impl;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
 import com.microservice.ecommerce.client.UserServiceClient;
 import com.microservice.ecommerce.exception.BusinessException;
 import com.microservice.ecommerce.model.document.ProductDocument;
@@ -34,7 +33,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -47,7 +45,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -144,7 +145,6 @@ public class ProductServiceImpl implements ProductService {
                 .name(product.getName())
                 .description(product.getDescription())
                 .price(product.getPrice())
-                .stock(product.getStock())
                 .creatorName(product.getCreatorName())
                 .createdDate(product.getCreatedDate())
                 .images(imageResponses)
@@ -322,7 +322,6 @@ public class ProductServiceImpl implements ProductService {
                 .name(product.getName())
                 .description(product.getDescription())
                 .price(product.getPrice())
-                .stock(product.getStock())
                 .creatorName(product.getCreatorName())
                 .createdDate(product.getCreatedDate())
                 .images(imageResponses)
@@ -381,7 +380,6 @@ public class ProductServiceImpl implements ProductService {
                 .name(product.getName())
                 .description(product.getDescription())
                 .price(product.getPrice())
-                .stock(product.getStock())
                 .creatorName(product.getCreatorName())
                 .createdDate(product.getCreatedDate())
                 .images(imageResponses)
@@ -425,7 +423,6 @@ public class ProductServiceImpl implements ProductService {
                 .name(product.getName())
                 .description(product.getDescription())
                 .price(product.getPrice())
-                .stock(product.getStock())
                 .creatorName(product.getCreatorName())
                 .isActive(product.getIsActive())
                 .build();

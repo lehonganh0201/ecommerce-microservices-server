@@ -10,8 +10,10 @@ import com.microservice.ecommerce.model.global.Status;
 import com.microservice.ecommerce.model.mapper.ProductImageMapper;
 import com.microservice.ecommerce.model.mapper.ProductMapper;
 import com.microservice.ecommerce.model.mapper.ProductVariantMapper;
+import com.microservice.ecommerce.model.request.OrderItemRequest;
 import com.microservice.ecommerce.model.request.ProductVariantRequest;
 import com.microservice.ecommerce.model.response.ProductAttributeResponse;
+import com.microservice.ecommerce.model.response.ProductPriceResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import com.microservice.ecommerce.model.response.ProductVariantResponse;
 import com.microservice.ecommerce.repository.ProductAttributeRepository;
@@ -33,7 +35,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -254,6 +258,90 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
         return new GlobalResponse<>(Status.SUCCESS, "Cập nhật ảnh cho biến thể thành công");
     }
+
+    @Override
+    public Boolean checkStock(List<OrderItemRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new BusinessException("Danh sách sản phẩm không được để trống.");
+        }
+
+        List<UUID> variantIds = requests.stream()
+                .map(OrderItemRequest::variantId)
+                .collect(Collectors.toList());
+
+        List<ProductVariant> variants = variantRepository.findAllById(variantIds);
+        Map<UUID, ProductVariant> variantMap = variants.stream()
+                .collect(Collectors.toMap(ProductVariant::getId, v -> v));
+
+        for (OrderItemRequest request : requests) {
+            ProductVariant variant = variantMap.get(request.variantId());
+
+            if (variant == null) {
+                throw new EntityNotFoundException("Không tìm thấy sản phẩm");
+            }
+
+            if (variant.getStock() < request.quantity()) {
+                throw new BusinessException("Không đủ sản phẩm trong kho hàng");
+            }
+
+            if (!variant.getProduct().getId().equals(request.productId())) {
+                throw new BusinessException("Sản phẩm không có biến thể được cung cấp.");
+            }
+        }
+        return true;
+    }
+
+
+    @Override
+    public List<ProductPriceResponse> getPrices(List<UUID> variantIds) {
+        if (variantIds == null || variantIds.isEmpty()) {
+            throw new BusinessException("Danh sách biến thể không được để trống.");
+        }
+
+        List<ProductVariant> variants = variantRepository.findAllById(variantIds);
+
+        return variants.stream()
+                .map(variant -> new ProductPriceResponse(variant.getId(), variant.getPrice()))
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    public Void updateStock(List<OrderItemRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new BusinessException("Danh sách sản phẩm không được để trống.");
+        }
+
+        List<UUID> variantIds = requests.stream()
+                .map(OrderItemRequest::variantId)
+                .collect(Collectors.toList());
+
+        List<ProductVariant> variants = variantRepository.findAllById(variantIds);
+        Map<UUID, ProductVariant> variantMap = variants.stream()
+                .collect(Collectors.toMap(ProductVariant::getId, v -> v));
+
+        for (OrderItemRequest request : requests) {
+            ProductVariant variant = variantMap.get(request.variantId());
+
+            if (variant == null) {
+                throw new EntityNotFoundException("Không tìm thấy sản phẩm");
+            }
+
+            if (!variant.getProduct().getId().equals(request.productId())) {
+                throw new BusinessException("Sản phẩm không có biến thể được cung cấp.");
+            }
+
+            if (variant.getStock() < request.quantity()) {
+                throw new BusinessException("Không đủ sản phẩm trong kho hàng.");
+            }
+
+            variant.setStock(variant.getStock() - request.quantity());
+        }
+
+        variantRepository.saveAll(variants);
+        return null;
+    }
+
 
 
     private ProductResponse getProductResponse(Product product) {

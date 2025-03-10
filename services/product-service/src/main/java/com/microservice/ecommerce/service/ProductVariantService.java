@@ -1,10 +1,13 @@
 package com.microservice.ecommerce.service;
 
 import com.microservice.ecommerce.model.global.GlobalResponse;
+import com.microservice.ecommerce.model.request.OrderItemRequest;
 import com.microservice.ecommerce.model.request.ProductVariantRequest;
+import com.microservice.ecommerce.model.response.ProductPriceResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -25,4 +28,10 @@ public interface ProductVariantService {
     GlobalResponse<String> deleteProductVariantById(UUID variantId);
 
     GlobalResponse<String> uploadImageToVariant(UUID variantId, MultipartFile image);
+
+    Boolean checkStock(List<OrderItemRequest> requests);
+
+    List<ProductPriceResponse> getPrices(List<UUID> variantIds);
+
+    Void updateStock(List<OrderItemRequest> requests);
 }

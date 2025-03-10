@@ -1,5 +1,7 @@
 package com.microservice.ecommerce.model.entity;
 
+import com.microservice.ecommerce.constant.OrderStatus;
+import com.microservice.ecommerce.constant.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -9,66 +11,54 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
- * Created on:    04/03/2025 at 8:09 AM
+ * Created on:    09/03/2025 at 4:57 PM
  * Project:       ecommerce-microservices
  * Contact:       https://github.com/lehonganh0201
  * ----------------------------------------------------------------------------
  */
 
+@Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "products")
 @Builder
-@Entity
+@Table(name = "orders")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EntityListeners(AuditingEntityListener.class)
-public class Product {
+public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(nullable = false, updatable = false, unique = true)
     UUID id;
 
-    @Column(nullable = false)
-    String name;
+    String reference;
 
-    String description;
+    Double totalAmount;
 
-    @Column(nullable = false)
-    Double price;
+    @Enumerated(value = EnumType.STRING)
+    PaymentMethod paymentMethod;
 
-    Boolean isActive = true;
+    @Enumerated(EnumType.STRING)
+    OrderStatus status;
 
     @CreatedBy
-    @Column(nullable = false, updatable = false)
-    String createdBy;
+    String userId;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    Category category;
-
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<ProductVariant> variants = new ArrayList<>();
-
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<ProductImage> images = new ArrayList<>();
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<OrderItem> orderItems;
 
     @CreatedDate
-    @Column(updatable = false, nullable = false)
+    @Column(nullable = false, updatable = false)
     LocalDateTime createdDate;
 
-    @Column(nullable = false, updatable = false)
-    String creatorName;
-
     @LastModifiedDate
-    @Column(nullable = false)
+    @Column(insertable = false)
     LocalDateTime lastModifiedDate;
 }

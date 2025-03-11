@@ -1,5 +1,11 @@
 package com.microservice.ecommerce.config;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +20,9 @@ import java.util.Properties;
  * ----------------------------------------------------------------------------
  */
 
+@Configuration
+@Data
+@NoArgsConstructor
 public class Environment {
 
     private PartnerInfo partnerInfo;
@@ -24,6 +33,7 @@ public class Environment {
         this(endpoints, partnerInfo, target.string());
     }
 
+    @Autowired
     public Environment(MoMoEndpoint momoEndpoint, PartnerInfo partnerInfo, String target) {
         this.endpoints = momoEndpoint;
         this.partnerInfo = partnerInfo;

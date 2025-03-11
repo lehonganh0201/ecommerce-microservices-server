@@ -1,5 +1,8 @@
 package com.microservice.ecommerce.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
@@ -9,7 +12,7 @@ package com.microservice.ecommerce.config;
  * ----------------------------------------------------------------------------
  */
 
-
+@Component
 public class PartnerInfo {
 
     private String accessKey;
@@ -23,6 +26,7 @@ public class PartnerInfo {
         this.secretKey = secretKey;
     }
 
+    @Autowired
     public PartnerInfo(String partnerCode, String accessKey, String secretKey, String publicKey) {
         this.accessKey = accessKey;
         this.partnerCode = partnerCode;

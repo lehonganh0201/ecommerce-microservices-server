@@ -1,5 +1,8 @@
 package com.microservice.ecommerce.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
@@ -9,8 +12,9 @@ package com.microservice.ecommerce.config;
  * ----------------------------------------------------------------------------
  */
 
-
+@Component
 public class MoMoEndpoint {
+
     private String endpoint;
     private String create;
     private String refund;
@@ -21,6 +25,7 @@ public class MoMoEndpoint {
     private String tokenCbInquiry;
     private String tokenDelete;
 
+    @Autowired
     public MoMoEndpoint(String endpoint, String create, String refund, String query, String confirm, String tokenPay, String tokenBind, String tokenQueryCb, String tokenDelete) {
         this.endpoint = endpoint;
         this.create = create;

@@ -91,7 +91,8 @@ public class MoMoEnvironment {
                             prop.getProperty("TOKEN_PAY_URL"),
                             prop.getProperty("TOKEN_BIND_URL"),
                             prop.getProperty("TOKEN_INQUIRY_URL"),
-                            prop.getProperty("TOKEN_DELETE_URL"));                    PartnerInfo prodInfo = new PartnerInfo(prop.getProperty("PROD_PARTNER_CODE"), prop.getProperty("PROD_ACCESS_KEY"), prop.getProperty("PROD_SECRET_KEY"));
+                            prop.getProperty("TOKEN_DELETE_URL"));
+                    PartnerInfo prodInfo = new PartnerInfo(prop.getProperty("PROD_ACCESS_KEY"), prop.getProperty("PROD_PARTNER_CODE"), prop.getProperty("PROD_SECRET_KEY"));
                     MoMoEnvironment prod = new MoMoEnvironment(prodEndpoint, prodInfo, target.getTarget());
                     return prod;
                 default:

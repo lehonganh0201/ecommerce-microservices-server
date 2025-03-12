@@ -1,6 +1,6 @@
 package com.microservice.ecommerce.service.impl;
 
-import com.microservice.ecommerce.config.Environment;
+import com.microservice.ecommerce.config.MoMoEnvironment;
 import com.microservice.ecommerce.constant.RequestType;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.Status;
@@ -44,7 +44,7 @@ public class PaymentServiceImpl implements PaymentService {
         String callbackToken = "callbackToken";
         String token = "";
 
-        Environment environment = Environment.selectEnv("dev");
+        MoMoEnvironment environment = MoMoEnvironment.selectEnv("dev");
 
 
 //      Remember to change the IDs at enviroment.properties file
@@ -56,9 +56,12 @@ public class PaymentServiceImpl implements PaymentService {
                 Long.toString(amount), orderInfo, returnURL, notifyURL, "", RequestType.CAPTURE_WALLET,
                 Boolean.TRUE
         );
-        return new GlobalResponse<>(
-                Status.SUCCESS,
-                captureWalletMoMoResponse
-        );
+        if (captureWalletMoMoResponse != null && captureWalletMoMoResponse.getResultCode() == 0) {
+            log.info("Thanh toán thành công với MoMo. Mã giao dịch: {}", captureWalletMoMoResponse.getTransId());
+            return new GlobalResponse<>(Status.SUCCESS, captureWalletMoMoResponse);
+        } else {
+            log.error("Thanh toán thất bại. Mã lỗi: {}", captureWalletMoMoResponse != null ? captureWalletMoMoResponse.getResultCode() : "null");
+            return new GlobalResponse<>(Status.ERROR, captureWalletMoMoResponse);
+        }
     }
 }

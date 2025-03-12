@@ -1,6 +1,11 @@
 package com.microservice.ecommerce.config;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,57 +17,21 @@ import org.springframework.stereotype.Component;
  * ----------------------------------------------------------------------------
  */
 
+@Getter
+@Setter
 @Component
+@PropertySource("classpath:environment.properties")
 public class PartnerInfo {
 
     private String accessKey;
     private String partnerCode;
     private String secretKey;
-    private String publicKey;
 
-    public PartnerInfo(String partnerCode, String accessKey, String secretKey) {
+    public PartnerInfo(@Value("${DEV_ACCESS_KEY}") String accessKey,
+                       @Value("${DEV_PARTNER_CODE}") String partnerCode,
+                       @Value("${DEV_SECRET_KEY}") String secretKey) {
         this.accessKey = accessKey;
         this.partnerCode = partnerCode;
         this.secretKey = secretKey;
-    }
-
-    @Autowired
-    public PartnerInfo(String partnerCode, String accessKey, String secretKey, String publicKey) {
-        this.accessKey = accessKey;
-        this.partnerCode = partnerCode;
-        this.secretKey = secretKey;
-        this.publicKey = publicKey;
-    }
-
-    public String getAccessKey() {
-        return accessKey;
-    }
-
-    public void setAccessKey(String accessKey) {
-        this.accessKey = accessKey;
-    }
-
-    public String getPartnerCode() {
-        return partnerCode;
-    }
-
-    public void setPartnerCode(String partnerCode) {
-        this.partnerCode = partnerCode;
-    }
-
-    public String getSecretKey() {
-        return secretKey;
-    }
-
-    public void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
-    }
-
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
-    }
-
-    public String getPublicKey() {
-        return publicKey;
     }
 }

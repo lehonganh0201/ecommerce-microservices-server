@@ -2,7 +2,7 @@ package com.microservice.ecommerce.service;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.microservice.ecommerce.config.Environment;
+import com.microservice.ecommerce.config.MoMoEnvironment;
 import com.microservice.ecommerce.config.PartnerInfo;
 import com.microservice.ecommerce.exception.MoMoException;
 import com.microservice.ecommerce.util.Execute;
@@ -20,10 +20,10 @@ import com.microservice.ecommerce.util.Execute;
 public abstract class AbstractProcess<T, V> {
 
     protected PartnerInfo partnerInfo;
-    protected Environment environment;
+    protected MoMoEnvironment environment;
     protected Execute execute = new Execute();
 
-    public AbstractProcess(Environment environment) {
+    public AbstractProcess(MoMoEnvironment environment) {
         this.environment = environment;
         this.partnerInfo = environment.getPartnerInfo();
     }

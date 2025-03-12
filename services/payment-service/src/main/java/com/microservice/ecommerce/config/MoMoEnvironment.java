@@ -1,9 +1,11 @@
 package com.microservice.ecommerce.config;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.FileNotFoundException;
@@ -20,22 +22,19 @@ import java.util.Properties;
  * ----------------------------------------------------------------------------
  */
 
-@Configuration
-@Data
+@Component
+@Getter
+@Setter
 @NoArgsConstructor
-public class Environment {
+public class MoMoEnvironment {
 
     private PartnerInfo partnerInfo;
     private MoMoEndpoint endpoints;
     private String target;
 
-    public Environment(MoMoEndpoint endpoints, PartnerInfo partnerInfo, EnvTarget target) {
-        this(endpoints, partnerInfo, target.string());
-    }
-
     @Autowired
-    public Environment(MoMoEndpoint momoEndpoint, PartnerInfo partnerInfo, String target) {
-        this.endpoints = momoEndpoint;
+    public MoMoEnvironment(MoMoEndpoint endpoints, PartnerInfo partnerInfo, @Value("${DEV_MOMO_ENV}") String target) {
+        this.endpoints = endpoints;
         this.partnerInfo = partnerInfo;
         this.target = target;
     }
@@ -46,7 +45,7 @@ public class Environment {
      * @return
      * @throws IllegalArgumentException
      */
-    public static Environment selectEnv(String target) throws IllegalArgumentException {
+    public static MoMoEnvironment selectEnv(String target) throws IllegalArgumentException {
         switch(target) {
             case "dev":
                 return selectEnv(EnvTarget.DEV);
@@ -64,8 +63,8 @@ public class Environment {
      * @param target EnvTarget (choose DEV or PROD)
      * @return
      */
-    public static Environment selectEnv(EnvTarget target) {
-        try (InputStream input = Environment.class.getClassLoader().getResourceAsStream("environment.properties")) {
+    public static MoMoEnvironment selectEnv(EnvTarget target) {
+        try (InputStream input = MoMoEnvironment.class.getClassLoader().getResourceAsStream("environment.properties")) {
             Properties prop = new Properties();
             prop.load(input);
 
@@ -80,8 +79,8 @@ public class Environment {
                             prop.getProperty("TOKEN_BIND_URL"),
                             prop.getProperty("TOKEN_INQUIRY_URL"),
                             prop.getProperty("TOKEN_DELETE_URL"));
-                    PartnerInfo devInfo = new PartnerInfo(prop.getProperty("DEV_PARTNER_CODE"), prop.getProperty("DEV_ACCESS_KEY"), prop.getProperty("DEV_SECRET_KEY"));
-                    Environment dev = new Environment(devEndpoint, devInfo, target);
+                    PartnerInfo devInfo = new PartnerInfo(prop.getProperty("DEV_ACCESS_KEY"), prop.getProperty("DEV_PARTNER_CODE"), prop.getProperty("DEV_SECRET_KEY"));
+                    MoMoEnvironment dev = new MoMoEnvironment(devEndpoint, devInfo, target.getTarget());
                     return dev;
                 case PROD:
                     MoMoEndpoint prodEndpoint = new MoMoEndpoint(prop.getProperty("PROD_MOMO_ENDPOINT"),
@@ -93,7 +92,7 @@ public class Environment {
                             prop.getProperty("TOKEN_BIND_URL"),
                             prop.getProperty("TOKEN_INQUIRY_URL"),
                             prop.getProperty("TOKEN_DELETE_URL"));                    PartnerInfo prodInfo = new PartnerInfo(prop.getProperty("PROD_PARTNER_CODE"), prop.getProperty("PROD_ACCESS_KEY"), prop.getProperty("PROD_SECRET_KEY"));
-                    Environment prod = new Environment(prodEndpoint, prodInfo, target);
+                    MoMoEnvironment prod = new MoMoEnvironment(prodEndpoint, prodInfo, target.getTarget());
                     return prod;
                 default:
                     throw new IllegalArgumentException("MoMo doesnt provide other environment: dev and prod");
@@ -107,42 +106,12 @@ public class Environment {
         return null;
     }
 
-    public MoMoEndpoint getMomoEndpoint() {
-        return endpoints;
-    }
-
-    public void setMomoEndpoint(MoMoEndpoint momoEndpoint) {
-        this.endpoints = momoEndpoint;
-    }
-
-    public PartnerInfo getPartnerInfo() {
-        return partnerInfo;
-    }
-
-    public void setPartnerInfo(PartnerInfo partnerInfo) {
-        this.partnerInfo = partnerInfo;
-    }
-
-    public String getTarget() {
-        return target;
-    }
-
-    public void setTarget(String target) {
-        this.target = target;
-    }
-
+    @AllArgsConstructor
     public enum EnvTarget {
         DEV("development"), PROD("production");
 
+        @Getter
         private String target;
-
-        EnvTarget(String target) {
-            this.target = target;
-        }
-
-        public String string() {
-            return this.target;
-        }
     }
 
     public enum ProcessType {

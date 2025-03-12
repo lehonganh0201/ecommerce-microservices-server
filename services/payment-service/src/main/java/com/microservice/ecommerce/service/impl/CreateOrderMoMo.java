@@ -1,6 +1,6 @@
 package com.microservice.ecommerce.service.impl;
 
-import com.microservice.ecommerce.config.Environment;
+import com.microservice.ecommerce.config.MoMoEnvironment;
 import com.microservice.ecommerce.constant.Language;
 import com.microservice.ecommerce.constant.Parameter;
 import com.microservice.ecommerce.constant.RequestType;
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 public class CreateOrderMoMo extends AbstractProcess<PaymentRequest, PaymentResponse> {
 
     @Autowired
-    public CreateOrderMoMo(Environment environment) {
+    public CreateOrderMoMo(MoMoEnvironment environment) {
         super(environment);
     }
 
@@ -45,7 +45,7 @@ public class CreateOrderMoMo extends AbstractProcess<PaymentRequest, PaymentResp
      * @return PaymentResponse
      **/
 
-    public static PaymentResponse process(Environment env, String orderId, String requestId, String amount, String orderInfo, String returnURL, String notifyURL, String extraData, RequestType requestType, Boolean autoCapture) throws Exception {
+    public static PaymentResponse process(MoMoEnvironment env, String orderId, String requestId, String amount, String orderInfo, String returnURL, String notifyURL, String extraData, RequestType requestType, Boolean autoCapture) throws Exception {
         try {
             CreateOrderMoMo m2Processor = new CreateOrderMoMo(env);
 
@@ -65,7 +65,7 @@ public class CreateOrderMoMo extends AbstractProcess<PaymentRequest, PaymentResp
 
             String payload = getGson().toJson(request, PaymentRequest.class);
 
-            HttpResponse response = execute.sendToMoMo(environment.getMomoEndpoint().getCreateUrl(), payload);
+            HttpResponse response = execute.sendToMoMo(environment.getEndpoints().getCreateUrl(), payload);
 
             if (response.getStatus() != 200) {
                 throw new MoMoException("[PaymentResponse] [" + request.getOrderId() + "] -> Error API");
@@ -119,6 +119,8 @@ public class CreateOrderMoMo extends AbstractProcess<PaymentRequest, PaymentResp
 
             String signRequest = Encoder.signHmacSHA256(requestRawData, partnerInfo.getSecretKey());
             LogUtils.debug("[PaymentRequest] rawData: " + requestRawData + ", [Signature] -> " + signRequest);
+
+            LogUtils.info("ERRORRRRRRRRRRRRRRRR" + partnerInfo.getAccessKey() + " " + partnerInfo.getPartnerCode() + " "+ partnerInfo.getSecretKey());
 
             return new PaymentRequest(partnerInfo.getPartnerCode(), orderId, requestId, Language.EN, orderInfo, Long.valueOf(amount), "test MoMo", null, requestType,
                     returnUrl, notifyUrl, "test store ID", extraData, null, autoCapture, null, signRequest);

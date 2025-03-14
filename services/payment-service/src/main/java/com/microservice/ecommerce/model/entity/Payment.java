@@ -1,6 +1,5 @@
 package com.microservice.ecommerce.model.entity;
 
-import com.microservice.ecommerce.constant.OrderStatus;
 import com.microservice.ecommerce.constant.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,52 +10,44 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
- * Created on:    09/03/2025 at 4:57 PM
+ * Created on:    13/03/2025 at 7:08 PM
  * Project:       ecommerce-microservices
  * Contact:       https://github.com/lehonganh0201
  * ----------------------------------------------------------------------------
  */
 
-@Entity
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-@Table(name = "orders")
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@Getter
+@Setter
+@Entity
 @EntityListeners(AuditingEntityListener.class)
-public class Order {
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class Payment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     UUID id;
 
-    String reference;
-
-    Double totalAmount;
-
-    @Enumerated(value = EnumType.STRING)
-    PaymentMethod paymentMethod;
+    Double amount;
 
     @Enumerated(EnumType.STRING)
-    OrderStatus status;
+    PaymentMethod paymentMethod;
 
-    @CreatedBy
-    String userId;
+    @Column(nullable = false, updatable = false, unique = true)
+    UUID orderId;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<OrderItem> orderItems = new ArrayList<>();
+    String bankCode;
+
+    String language;
 
     @CreatedDate
-    @Column(nullable = false, updatable = false)
+    @Column(updatable = false, nullable = false)
     LocalDateTime createdDate;
 
     @LastModifiedDate

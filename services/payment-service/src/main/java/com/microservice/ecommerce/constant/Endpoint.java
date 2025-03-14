@@ -17,5 +17,7 @@ public interface Endpoint {
         String MOMO = "/momo";
         String VN_PAY = "/vn-pay";
         String VN_PAY_CALLBACK = "/callback";
+        String MOMO_NOTIFY = "/notify";
+        String MOMO_CALLBACK = "/return";
     }
 }

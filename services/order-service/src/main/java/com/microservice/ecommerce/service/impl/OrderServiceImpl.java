@@ -1,12 +1,17 @@
 package com.microservice.ecommerce.service.impl;
 
+import com.microservice.ecommerce.client.PaymentClient;
 import com.microservice.ecommerce.client.ProductClient;
 import com.microservice.ecommerce.constant.OrderStatus;
+import com.microservice.ecommerce.constant.PaymentMethod;
 import com.microservice.ecommerce.exception.BusinessException;
+import com.microservice.ecommerce.message.OrderProducer;
 import com.microservice.ecommerce.model.dto.request.OrderItemRequest;
 import com.microservice.ecommerce.model.dto.request.OrderRequest;
+import com.microservice.ecommerce.model.dto.request.PaymentRequest;
 import com.microservice.ecommerce.model.dto.response.OrderItemResponse;
 import com.microservice.ecommerce.model.dto.response.OrderResponse;
+import com.microservice.ecommerce.model.dto.response.PaymentResponse;
 import com.microservice.ecommerce.model.dto.response.ProductPriceResponse;
 import com.microservice.ecommerce.model.entity.Order;
 import com.microservice.ecommerce.model.entity.OrderItem;
@@ -24,6 +29,7 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,9 +52,13 @@ public class OrderServiceImpl implements OrderService {
     OrderRepository orderRepository;
 
     ProductClient productClient;
+    PaymentClient paymentClient;
+
+    OrderProducer orderProducer;
 
     @Override
     public GlobalResponse<OrderResponse> createOrder(OrderRequest request, Jwt jwt) {
+        log.info("RECEIVE ORDER CREATE: {}", request.items());
         boolean isStockAvailable = productClient.checkStock(request.items()).getBody();
 
         if (!isStockAvailable) {
@@ -68,26 +78,60 @@ public class OrderServiceImpl implements OrderService {
                 .mapToDouble(item -> priceMap.getOrDefault(item.variantId(), 0.0) * item.quantity())
                 .sum();
 
-        List<OrderItem> orderItems = request.items().stream()
-                .map(item -> OrderItem.builder()
-                        .price(priceMap.get(item.variantId()))
-                        .quantity(item.quantity())
-                        .productId(item.productId())
-                        .variantId(item.variantId())
-                        .build()
-                ).collect(Collectors.toList());
-
-        Order order = Order.builder()
+        Order order = orderRepository.save(Order.builder()
                 .paymentMethod(request.paymentMethod())
                 .reference(GeneratorUtil.generatorReference())
                 .status(OrderStatus.PENDING)
                 .totalAmount(totalAmount)
-                .orderItems(orderItems)
-                .build();
+                .build());
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (var item : request.items()) {
+            OrderItem orderItem = OrderItem.builder()
+                    .order(order)
+                    .price(priceMap.get(item.variantId()))
+                    .quantity(item.quantity())
+                    .productId(item.productId())
+                    .variantId(item.variantId())
+                    .build();
+            orderItems.add(orderItem);
+        }
+
+        order.setOrderItems(orderItems);
 
         order = orderRepository.save(order);
 
-        productClient.updateStock(request.items());
+
+        orderProducer.sendUpdateStock(request.items());
+
+        PaymentResponse paymentResponse;
+
+        if (request.paymentMethod().equals(PaymentMethod.MOMO)) {
+            paymentResponse = paymentClient.createMoMoPayment(new PaymentRequest(
+                    totalAmount,
+                    request.paymentMethod(),
+                    order.getId(),
+                    request.bankCode() != null ? request.bankCode() : null,
+                    request.language()
+            )).getBody().data();
+        }
+        else if (request.paymentMethod().equals(PaymentMethod.VN_PAY)) {
+            paymentResponse = paymentClient.createVNPayPayment(new PaymentRequest(
+                    totalAmount,
+                    request.paymentMethod(),
+                    order.getId(),
+                    request.bankCode() != null ? request.bankCode() : null,
+                    request.language()
+            )).getBody().data();
+        }else {
+            paymentResponse = paymentClient.createCODPayment(new PaymentRequest(
+                    totalAmount,
+                    request.paymentMethod(),
+                    order.getId(),
+                    null,
+                    request.language()
+            )).getBody().data();
+        }
 
         return new GlobalResponse<>(
                 Status.SUCCESS,
@@ -102,7 +146,8 @@ public class OrderServiceImpl implements OrderService {
                                         item.getQuantity(),
                                         item.getPrice()
                                 ))
-                        .collect(Collectors.toList())
+                        .collect(Collectors.toList()),
+                        paymentResponse
                 )
         );
     }
@@ -173,7 +218,8 @@ public class OrderServiceImpl implements OrderService {
                                         item.getQuantity(),
                                         item.getPrice()
                                 ))
-                                .collect(Collectors.toList())
+                                .collect(Collectors.toList()),
+                        null
                 ))
                 .collect(Collectors.toList());
     }

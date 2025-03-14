@@ -1,10 +1,9 @@
 package com.microservice.ecommerce.controller;
 
 import com.microservice.ecommerce.constant.Endpoint;
-import com.microservice.ecommerce.model.dto.request.PaymentVNPayRequest;
+import com.microservice.ecommerce.model.dto.request.PaymentRequest;
+import com.microservice.ecommerce.model.dto.response.PaymentResponse;
 import com.microservice.ecommerce.model.global.GlobalResponse;
-import com.microservice.ecommerce.model.momo.PaymentRequest;
-import com.microservice.ecommerce.model.momo.PaymentResponse;
 import com.microservice.ecommerce.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -36,14 +35,23 @@ public class PaymentController {
 
     @PostMapping(Endpoint.Payment.MOMO)
     public ResponseEntity<GlobalResponse<PaymentResponse>> createPayment(
+            @RequestBody @Valid PaymentRequest request
     ) throws Exception {
         return ResponseEntity
-                .ok(paymentService.saveMoMoPayment(null));
+                .ok(paymentService.saveMoMoPayment(request));
+    }
+
+    @PostMapping()
+    public ResponseEntity<GlobalResponse<PaymentResponse>> createCODPayment(
+            @RequestBody @Valid PaymentRequest request
+    ) {
+        return ResponseEntity
+                .ok(paymentService.savePayment(request));
     }
 
     @PostMapping(Endpoint.Payment.VN_PAY)
-    public ResponseEntity<GlobalResponse<Map<String, String>>> createPayment(
-            @RequestBody PaymentVNPayRequest request,
+    public ResponseEntity<GlobalResponse<PaymentResponse>> createPayment(
+            @RequestBody @Valid PaymentRequest request,
             HttpServletRequest httpServletRequest
     ) {
         return ResponseEntity.ok(
@@ -58,4 +66,27 @@ public class PaymentController {
         log.info("Received VNPAY callback: {}", requestParams);
         return ResponseEntity.ok(null);
     }
+//
+//    @PostMapping(Endpoint.Payment.MOMO_NOTIFY)
+//    public ResponseEntity<Void> handleMoMoCallback(
+//            @RequestBody Map<String, Object> requestBody
+//    ) {
+//        log.info("Received MOMO callback: {}", requestBody);
+//
+//        return ResponseEntity.noContent().build();
+//    }
+//
+//    @GetMapping(Endpoint.Payment.MOMO_CALLBACK)
+//    public ResponseEntity<String> handleReturnUrl(@RequestParam Map<String, String> params) {
+//        String status = params.get("resultCode"); // MoMo trả về mã trạng thái
+//        String orderId = params.get("orderId");
+//
+//        log.info("Received MOMO callback return URL: {}", params);
+//
+//        if ("0".equals(status)) { // "0" là thành công
+//            return ResponseEntity.ok("Thanh toán thành công! Order ID: " + orderId);
+//        } else {
+//            return ResponseEntity.ok("Thanh toán thất bại. Mã lỗi: " + status);
+//        }
+//    }
 }

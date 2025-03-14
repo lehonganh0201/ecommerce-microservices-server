@@ -1,9 +1,8 @@
 package com.microservice.ecommerce.service;
 
-import com.microservice.ecommerce.model.dto.request.PaymentVNPayRequest;
+import com.microservice.ecommerce.model.dto.request.PaymentRequest;
+import com.microservice.ecommerce.model.dto.response.PaymentResponse;
 import com.microservice.ecommerce.model.global.GlobalResponse;
-import com.microservice.ecommerce.model.momo.PaymentRequest;
-import com.microservice.ecommerce.model.momo.PaymentResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Map;
@@ -21,5 +20,7 @@ import java.util.Map;
 public interface PaymentService {
     GlobalResponse<PaymentResponse> saveMoMoPayment(PaymentRequest request) throws Exception;
 
-    GlobalResponse<Map<String, String>> saveVNPayPayment(PaymentVNPayRequest request, HttpServletRequest httpServletRequest);
+    GlobalResponse<PaymentResponse> saveVNPayPayment(PaymentRequest request, HttpServletRequest httpServletRequest);
+
+    GlobalResponse<PaymentResponse> savePayment(PaymentRequest request);
 }

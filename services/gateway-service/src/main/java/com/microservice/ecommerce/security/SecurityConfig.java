@@ -27,9 +27,10 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/eureka/**").permitAll()
                         .pathMatchers("/api/v1/auths/**").permitAll()
-                        .pathMatchers(HttpMethod.GET, "/api/v1/products/**",
-                                "/api/v1/categories/**",
-                                "/api/v1/variants/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/v1/variants/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/v1/products/search/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()));

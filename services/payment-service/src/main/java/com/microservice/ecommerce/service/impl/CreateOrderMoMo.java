@@ -120,8 +120,6 @@ public class CreateOrderMoMo extends AbstractProcess<PaymentRequest, PaymentResp
             String signRequest = Encoder.signHmacSHA256(requestRawData, partnerInfo.getSecretKey());
             LogUtils.debug("[PaymentRequest] rawData: " + requestRawData + ", [Signature] -> " + signRequest);
 
-            LogUtils.info("ERRORRRRRRRRRRRRRRRR" + partnerInfo.getAccessKey() + " " + partnerInfo.getPartnerCode() + " "+ partnerInfo.getSecretKey());
-
             return new PaymentRequest(partnerInfo.getPartnerCode(), orderId, requestId, Language.EN, orderInfo, Long.valueOf(amount), "test MoMo", null, requestType,
                     returnUrl, notifyUrl, "test store ID", extraData, null, autoCapture, null, signRequest);
         } catch (Exception e) {

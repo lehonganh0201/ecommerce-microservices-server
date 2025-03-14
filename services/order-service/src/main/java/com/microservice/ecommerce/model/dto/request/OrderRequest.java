@@ -22,6 +22,10 @@ public record OrderRequest(
         @NotNull(message = "Payment method is required")
         PaymentMethod paymentMethod,
 
+        String language,
+
+        String bankCode,
+
         @NotEmpty(message = "Order must contain at least one item")
         @Valid
         List<OrderItemRequest> items

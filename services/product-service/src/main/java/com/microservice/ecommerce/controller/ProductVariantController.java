@@ -68,7 +68,7 @@ public class ProductVariantController {
                 .ok(variantService.uploadImageToVariant(variantId, image));
     }
 
-    @GetMapping(Endpoint.ProductVariant.CHECK_STOCK)
+    @PostMapping(Endpoint.ProductVariant.CHECK_STOCK)
     public ResponseEntity<Boolean> checkStock(
             @RequestBody @Valid List<OrderItemRequest> requests
     ) {
@@ -76,7 +76,7 @@ public class ProductVariantController {
                 .ok(variantService.checkStock(requests));
     }
 
-    @GetMapping(Endpoint.ProductVariant.GET_PRICE)
+    @PostMapping(Endpoint.ProductVariant.GET_PRICE)
     public ResponseEntity<List<ProductPriceResponse>> getPrices(
             @RequestBody List<UUID> variantIds
     ) {

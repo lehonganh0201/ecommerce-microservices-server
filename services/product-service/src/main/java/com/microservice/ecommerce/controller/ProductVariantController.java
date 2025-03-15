@@ -4,6 +4,7 @@ import com.microservice.ecommerce.constant.Endpoint;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.request.OrderItemRequest;
 import com.microservice.ecommerce.model.request.ProductVariantRequest;
+import com.microservice.ecommerce.model.request.PurchaseRequest;
 import com.microservice.ecommerce.model.response.ProductPriceResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import com.microservice.ecommerce.service.ProductVariantService;
@@ -78,10 +79,10 @@ public class ProductVariantController {
 
     @PostMapping(Endpoint.ProductVariant.GET_PRICE)
     public ResponseEntity<List<ProductPriceResponse>> getPrices(
-            @RequestBody List<UUID> variantIds
-    ) {
+            @RequestBody PurchaseRequest request
+            ) {
         return ResponseEntity
-                .ok(variantService.getPrices(variantIds));
+                .ok(variantService.getPrices(request));
     }
 
     @PutMapping(Endpoint.ProductVariant.UPDATE_STOCK)

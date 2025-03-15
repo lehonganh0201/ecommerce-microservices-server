@@ -2,9 +2,11 @@ package com.microservice.ecommerce.service.impl;
 
 import com.microservice.ecommerce.client.PaymentClient;
 import com.microservice.ecommerce.client.ProductClient;
+import com.microservice.ecommerce.client.PurchaseRequest;
 import com.microservice.ecommerce.constant.OrderStatus;
 import com.microservice.ecommerce.constant.PaymentMethod;
 import com.microservice.ecommerce.exception.BusinessException;
+import com.microservice.ecommerce.message.OrderConfirmation;
 import com.microservice.ecommerce.message.OrderProducer;
 import com.microservice.ecommerce.model.dto.request.OrderItemRequest;
 import com.microservice.ecommerce.model.dto.request.OrderRequest;
@@ -69,7 +71,13 @@ public class OrderServiceImpl implements OrderService {
                 .map(OrderItemRequest::variantId)
                 .collect(Collectors.toList());
 
-        List<ProductPriceResponse> prices = productClient.getProductPrices(variantIds).getBody();
+        Map<UUID, Integer> orderedQuantities = request.items().stream()
+                .collect(Collectors.toMap(OrderItemRequest::variantId, OrderItemRequest::quantity));
+
+        List<ProductPriceResponse> prices = productClient.getProductPrices(new PurchaseRequest(
+                variantIds,
+                orderedQuantities
+        )).getBody();
 
         Map<UUID, Double> priceMap = prices.stream()
                 .collect(Collectors.toMap(ProductPriceResponse::variantId, ProductPriceResponse::price));
@@ -101,6 +109,14 @@ public class OrderServiceImpl implements OrderService {
 
         order = orderRepository.save(order);
 
+        orderProducer.sendOrderConfirmation(new OrderConfirmation(
+            order.getReference(),
+            totalAmount,
+            order.getPaymentMethod().name(),
+            jwt.getClaims().get("name").toString(),
+            jwt.getClaims().get("email").toString(),
+            prices
+        ));
 
         orderProducer.sendUpdateStock(request.items());
 

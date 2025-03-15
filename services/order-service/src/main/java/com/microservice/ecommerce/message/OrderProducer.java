@@ -1,7 +1,6 @@
 package com.microservice.ecommerce.message;
 
 import com.microservice.ecommerce.model.dto.request.OrderItemRequest;
-import com.microservice.ecommerce.model.dto.request.PaymentRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -39,6 +38,17 @@ public class OrderProducer {
         kafkaTemplate.send(message);
         log.info("Gửi sự kiện cập nhật stock: {}", requests);
     }
+
+    public void sendOrderConfirmation(OrderConfirmation orderConfirmation) {
+        Message<OrderConfirmation> message = MessageBuilder
+                .withPayload(orderConfirmation)
+                .setHeader(KafkaHeaders.TOPIC, "order-confirmation-topic")
+                .build();
+
+        kafkaTemplate.send(message);
+        log.info("Gửi sự kiện xác nhận đơn hàng");
+    }
+
 
 //    public void sendSaveMoMoPayment(PaymentRequest request) {
 //        Message<PaymentRequest> message = MessageBuilder

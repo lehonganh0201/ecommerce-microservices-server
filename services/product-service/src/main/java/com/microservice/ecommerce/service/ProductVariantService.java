@@ -3,6 +3,7 @@ package com.microservice.ecommerce.service;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.request.OrderItemRequest;
 import com.microservice.ecommerce.model.request.ProductVariantRequest;
+import com.microservice.ecommerce.model.request.PurchaseRequest;
 import com.microservice.ecommerce.model.response.ProductPriceResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +32,7 @@ public interface ProductVariantService {
 
     Boolean checkStock(List<OrderItemRequest> requests);
 
-    List<ProductPriceResponse> getPrices(List<UUID> variantIds);
+    List<ProductPriceResponse> getPrices(PurchaseRequest request);
 
     Void updateStock(List<OrderItemRequest> requests);
 }

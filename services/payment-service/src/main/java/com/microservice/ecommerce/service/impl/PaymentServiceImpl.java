@@ -182,6 +182,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     }
 
+    @Override
+    public GlobalResponse<String> paymentConfirmation(Map<String, String> requestParams) {
+
+        return null;
+    }
+
     private com.microservice.ecommerce.model.dto.response.PaymentResponse savePayment(PaymentRequest request, UUID paymentId){
         Payment payment = paymentMapper.toPayment(request);
         payment.setId(paymentId);

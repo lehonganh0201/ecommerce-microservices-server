@@ -16,7 +16,7 @@ public interface Endpoint {
         String PREFIX = Endpoint.PREFIX + "/payments";
         String MOMO = "/momo";
         String VN_PAY = "/vn-pay";
-        String VN_PAY_CALLBACK = "/callback";
+        String CALLBACK = "/callback";
         String MOMO_NOTIFY = "/notify";
         String MOMO_CALLBACK = "/return";
     }

@@ -59,12 +59,12 @@ public class PaymentController {
         );
     }
 
-    @GetMapping(Endpoint.Payment.VN_PAY_CALLBACK)
-    public ResponseEntity<Void> handleVNPayCallback(
+    @GetMapping(Endpoint.Payment.CALLBACK)
+    public ResponseEntity<GlobalResponse<String>> handleVNPayCallback(
             @RequestParam Map<String, String> requestParams
     ) {
         log.info("Received VNPAY callback: {}", requestParams);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok(paymentService.paymentConfirmation(requestParams));
     }
 //
 //    @PostMapping(Endpoint.Payment.MOMO_NOTIFY)

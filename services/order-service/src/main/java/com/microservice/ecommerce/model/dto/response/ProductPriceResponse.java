@@ -14,6 +14,8 @@ import java.util.UUID;
 
 public record ProductPriceResponse(
         UUID variantId,
+        String productName,
+        Integer quantity,
         double price
 ) {
 }

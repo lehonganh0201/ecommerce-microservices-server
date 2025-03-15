@@ -3,7 +3,6 @@ package com.microservice.ecommerce.service.impl;
 import com.microservice.ecommerce.exception.BusinessException;
 import com.microservice.ecommerce.model.entity.Product;
 import com.microservice.ecommerce.model.entity.ProductAttribute;
-import com.microservice.ecommerce.model.entity.ProductImage;
 import com.microservice.ecommerce.model.entity.ProductVariant;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.Status;
@@ -12,12 +11,12 @@ import com.microservice.ecommerce.model.mapper.ProductMapper;
 import com.microservice.ecommerce.model.mapper.ProductVariantMapper;
 import com.microservice.ecommerce.model.request.OrderItemRequest;
 import com.microservice.ecommerce.model.request.ProductVariantRequest;
+import com.microservice.ecommerce.model.request.PurchaseRequest;
 import com.microservice.ecommerce.model.response.ProductAttributeResponse;
 import com.microservice.ecommerce.model.response.ProductPriceResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import com.microservice.ecommerce.model.response.ProductVariantResponse;
 import com.microservice.ecommerce.repository.ProductAttributeRepository;
-import com.microservice.ecommerce.repository.ProductImageRepository;
 import com.microservice.ecommerce.repository.ProductRepository;
 import com.microservice.ecommerce.repository.ProductVariantRepository;
 import com.microservice.ecommerce.service.ProductVariantService;
@@ -35,7 +34,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -57,14 +55,11 @@ import java.util.stream.Collectors;
 public class ProductVariantServiceImpl implements ProductVariantService {
     ProductVariantRepository variantRepository;
     ProductRepository productRepository;
-    ProductImageRepository imageRepository;
     ProductAttributeRepository attributeRepository;
 
     ProductVariantMapper variantMapper;
     ProductMapper productMapper;
     ProductImageMapper imageMapper;
-
-    FileUtil fileUtil;
 
     private static final String BASE_DIRECTORY = "resource/images/variant-images/";
     private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
@@ -247,7 +242,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 }
         }
 
-        String filePath = fileUtil.saveFile(image, BASE_DIRECTORY);
+        String filePath = FileUtil.saveFile(image, BASE_DIRECTORY);
         if (filePath == null) {
             throw new BusinessException("Không thể upload file, vui lòng thử lại");
         }
@@ -293,15 +288,18 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
 
     @Override
-    public List<ProductPriceResponse> getPrices(List<UUID> variantIds) {
-        if (variantIds == null || variantIds.isEmpty()) {
+    public List<ProductPriceResponse> getPrices(PurchaseRequest request) {
+        if (request.variantIds() == null || request.variantIds().isEmpty()) {
             throw new BusinessException("Danh sách biến thể không được để trống.");
         }
 
-        List<ProductVariant> variants = variantRepository.findAllById(variantIds);
+        List<ProductVariant> variants = variantRepository.findAllById(request.variantIds());
 
         return variants.stream()
-                .map(variant -> new ProductPriceResponse(variant.getId(), variant.getPrice()))
+                .map(variant -> new ProductPriceResponse(variant.getId(),
+                        variant.getProduct().getName(),
+                        request.orderedQuantities().getOrDefault(variant.getId(), 0),
+                        variant.getPrice()))
                 .collect(Collectors.toList());
     }
 
@@ -369,15 +367,11 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
                     variantResponse.setAttributes(
                             productVariant.getAttributes().stream()
-                                    .map(attribute -> {
-                                        ProductAttributeResponse attributeResponse = ProductAttributeResponse.builder()
-                                                .id(attribute.getId())
-                                                .type(attribute.getType().getValue())
-                                                .value(attribute.getValue())
-                                                .build();
-
-                                        return attributeResponse;
-                                    })
+                                    .map(attribute -> ProductAttributeResponse.builder()
+                                            .id(attribute.getId())
+                                            .type(attribute.getType().getValue())
+                                            .value(attribute.getValue())
+                                            .build())
                                     .collect(Collectors.toList())
                     );
                     return variantResponse;

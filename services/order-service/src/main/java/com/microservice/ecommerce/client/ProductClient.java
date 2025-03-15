@@ -33,5 +33,5 @@ public interface ProductClient {
     ResponseEntity<Void> updateStock(@RequestBody @Valid List<OrderItemRequest> items);
 
     @PostMapping(Endpoint.Variant.GET_PRICE)
-    ResponseEntity<List<ProductPriceResponse>> getProductPrices(@RequestBody List<UUID> variantIds);
+    ResponseEntity<List<ProductPriceResponse>> getProductPrices(@RequestBody PurchaseRequest request);
 }

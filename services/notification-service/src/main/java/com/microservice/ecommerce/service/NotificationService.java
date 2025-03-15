@@ -1,21 +1,17 @@
-package com.microservice.ecommerce.model.response;
+package com.microservice.ecommerce.service;
 
-import java.util.UUID;
+import com.microservice.ecommerce.document.Notification;
 
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
- * Created on:    10/03/2025 at 9:00 AM
+ * Created on:    15/03/2025 at 5:44 PM
  * Project:       ecommerce-microservices
  * Contact:       https://github.com/lehonganh0201
  * ----------------------------------------------------------------------------
  */
 
 
-public record ProductPriceResponse(
-        UUID variantId,
-        String productName,
-        Integer quantity,
-        double price
-) {
+public interface NotificationService {
+    void saveNotification(Notification notification);
 }

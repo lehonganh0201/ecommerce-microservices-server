@@ -23,4 +23,6 @@ public interface PaymentService {
     GlobalResponse<PaymentResponse> saveVNPayPayment(PaymentRequest request, HttpServletRequest httpServletRequest);
 
     GlobalResponse<PaymentResponse> savePayment(PaymentRequest request);
+
+    GlobalResponse<String> paymentConfirmation(Map<String, String> requestParams);
 }

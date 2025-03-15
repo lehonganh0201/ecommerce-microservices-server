@@ -1,21 +1,17 @@
-package com.microservice.ecommerce.model.response;
-
-import java.util.UUID;
+package com.microservice.ecommerce.document;
 
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
- * Created on:    10/03/2025 at 9:00 AM
+ * Created on:    15/03/2025 at 5:27 PM
  * Project:       ecommerce-microservices
  * Contact:       https://github.com/lehonganh0201
  * ----------------------------------------------------------------------------
  */
 
 
-public record ProductPriceResponse(
-        UUID variantId,
-        String productName,
-        Integer quantity,
-        double price
-) {
+public enum NotificationType {
+    ORDER_CONFIRMATION,
+    PAYMENT_CONFIRMATION,
+    PAYMENT_FAIL
 }

@@ -341,6 +341,27 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return null;
     }
 
+    @Override
+    public GlobalResponse<ProductVariantResponse> getProductVariantById(UUID variantId) {
+        ProductVariant variant = variantRepository.findById(variantId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy biến thể sản phẩm."));
+
+        return new GlobalResponse<>(
+                Status.SUCCESS,
+                ProductVariantResponse.builder()
+                        .id(variantId)
+                        .stock(variant.getStock())
+                        .price(variant.getPrice())
+                        .productName(variant.getProduct().getName())
+                        .imageUrl(variant.getImageUrl())
+                        .attributes(variant.getAttributes().stream().map(attribute -> ProductAttributeResponse.builder()
+                                .type(attribute.getType().getValue())
+                                .value(attribute.getValue())
+                                .build())
+                                .collect(Collectors.toList()))
+                        .build()
+        );
+    }
 
 
     private ProductResponse getProductResponse(Product product) {

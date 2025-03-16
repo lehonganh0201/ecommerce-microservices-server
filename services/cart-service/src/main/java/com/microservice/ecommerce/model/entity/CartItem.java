@@ -1,5 +1,6 @@
-package com.microservice.ecommerce.model.response;
+package com.microservice.ecommerce.model.entity;
 
+import com.microservice.ecommerce.client.ProductAttribute;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -9,7 +10,7 @@ import java.util.UUID;
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
- * Created on:    05/03/2025 at 10:32 PM
+ * Created on:    16/03/2025 at 2:27 PM
  * Project:       ecommerce-microservices
  * Contact:       https://github.com/lehonganh0201
  * ----------------------------------------------------------------------------
@@ -17,20 +18,15 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Builder
-public class ProductVariantResponse {
-    UUID id;
-
+public class CartItem {
+    UUID variantId;
     String productName;
-
-    Integer stock;
-
-    Double price;
-
-    List<ProductAttributeResponse> attributes;
-
+    int quantity;
+    double price;
     String imageUrl;
+    List<ProductAttribute> attributes;
 }

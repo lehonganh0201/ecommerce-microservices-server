@@ -1,15 +1,17 @@
-package com.microservice.ecommerce.model.response;
+package com.microservice.ecommerce.model.dto.response;
 
+import com.microservice.ecommerce.model.entity.CartItem;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
- * Created on:    05/03/2025 at 10:32 PM
+ * Created on:    16/03/2025 at 2:56 PM
  * Project:       ecommerce-microservices
  * Contact:       https://github.com/lehonganh0201
  * ----------------------------------------------------------------------------
@@ -19,18 +21,9 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class ProductVariantResponse {
-    UUID id;
-
-    String productName;
-
-    Integer stock;
-
-    Double price;
-
-    List<ProductAttributeResponse> attributes;
-
-    String imageUrl;
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class CartResponse {
+    List<CartItem> items;
+    LocalDateTime lastUpdated;
 }

@@ -7,6 +7,7 @@ import com.microservice.ecommerce.model.request.ProductVariantRequest;
 import com.microservice.ecommerce.model.request.PurchaseRequest;
 import com.microservice.ecommerce.model.response.ProductPriceResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
+import com.microservice.ecommerce.model.response.ProductVariantResponse;
 import com.microservice.ecommerce.service.ProductVariantService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -91,5 +92,13 @@ public class ProductVariantController {
     ) {
         return ResponseEntity
                 .ok(variantService.updateStock(requests));
+    }
+
+    @GetMapping(Endpoint.ProductVariant.VARIANT_ID)
+    public ResponseEntity<GlobalResponse<ProductVariantResponse>> getProductVariantById(
+            @PathVariable(name = "variantId") UUID variantId
+    ) {
+        return ResponseEntity
+                .ok(variantService.getProductVariantById(variantId));
     }
 }

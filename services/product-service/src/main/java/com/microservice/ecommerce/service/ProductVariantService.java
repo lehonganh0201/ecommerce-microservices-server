@@ -6,6 +6,7 @@ import com.microservice.ecommerce.model.request.ProductVariantRequest;
 import com.microservice.ecommerce.model.request.PurchaseRequest;
 import com.microservice.ecommerce.model.response.ProductPriceResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
+import com.microservice.ecommerce.model.response.ProductVariantResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -35,4 +36,6 @@ public interface ProductVariantService {
     List<ProductPriceResponse> getPrices(PurchaseRequest request);
 
     Void updateStock(List<OrderItemRequest> requests);
+
+    GlobalResponse<ProductVariantResponse> getProductVariantById(UUID variantId);
 }

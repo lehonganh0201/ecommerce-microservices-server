@@ -24,15 +24,24 @@ public class ConfigVNPay {
     @Value("${VNP_HASHSECRET}")
     private String secretKey;
 
+    @Value("${VNP_PAYURL}")
+    private String vnpPayUrl;
+
+    @Value("${VNP_RETURNURL}")
+    private String vnpReturnUrl;
+
+
     public static String vnp_TmnCode;
-    public static String vnp_ReturnUrl = "http://localhost:8086/api/v1/payments/callback";
-    public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+    public static String vnp_ReturnUrl;
+    public static String vnp_PayUrl;
     public static String vnp_SecretKey;
 
     @PostConstruct
     public void init() {
         vnp_TmnCode = vnpTmnCode;
         vnp_SecretKey = secretKey;
+        vnp_PayUrl = vnpPayUrl;
+        vnpReturnUrl=vnp_ReturnUrl;
     }
 
     public static String getRandomNumber(int length) {

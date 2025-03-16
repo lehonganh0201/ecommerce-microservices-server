@@ -3,6 +3,7 @@ package com.microservice.ecommerce.service.impl;
 import com.microservice.ecommerce.config.ConfigVNPay;
 import com.microservice.ecommerce.config.MoMoEnvironment;
 import com.microservice.ecommerce.constant.RequestType;
+import com.microservice.ecommerce.message.PaymentProducer;
 import com.microservice.ecommerce.model.dto.request.PaymentRequest;
 import com.microservice.ecommerce.model.entity.Payment;
 import com.microservice.ecommerce.model.global.GlobalResponse;
@@ -41,6 +42,8 @@ public class PaymentServiceImpl implements PaymentService {
     PaymentRepository paymentRepository;
 
     PaymentMapper paymentMapper;
+
+    PaymentProducer paymentProducer;
 
 
     @Override

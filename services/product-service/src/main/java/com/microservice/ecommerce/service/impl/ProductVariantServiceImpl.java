@@ -336,6 +336,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
             variant.setStock(variant.getStock() - request.quantity());
         }
 
+        log.info("Cập nhật stock của các biến thể: {}", variants);
         variantRepository.saveAll(variants);
         return null;
     }

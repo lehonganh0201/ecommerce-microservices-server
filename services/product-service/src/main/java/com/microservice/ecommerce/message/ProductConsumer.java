@@ -1,5 +1,6 @@
 package com.microservice.ecommerce.message;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microservice.ecommerce.model.request.OrderItemRequest;
 import com.microservice.ecommerce.service.ProductVariantService;
 import lombok.AccessLevel;
@@ -10,6 +11,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * ----------------------------------------------------------------------------
@@ -26,12 +29,14 @@ import java.util.List;
 @Log4j2
 public class ProductConsumer {
     ProductVariantService variantService;
+    ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "update-stock-topic", groupId = "product-service-group")
-    public void consumeStockUpdate(List<OrderItemRequest> requests) {
-        log.info("Nhận sự kiện cập nhật stock: {}", requests);
+    @KafkaListener(topics = "update-stock-topic", groupId = "product-service")
+    public void consumeStockUpdate(List<Map<String, Object>> messages) {
+        List<OrderItemRequest> requests = messages.stream()
+                .map(map -> objectMapper.convertValue(map, OrderItemRequest.class))
+                .collect(Collectors.toList());
 
-        // Gọi service để cập nhật số lượng sản phẩm
         variantService.updateStock(requests);
     }
 }

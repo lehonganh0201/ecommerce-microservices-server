@@ -1,5 +1,15 @@
 package com.microservice.ecommerce.message;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.stereotype.Service;
+
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
@@ -9,6 +19,30 @@ package com.microservice.ecommerce.message;
  * ----------------------------------------------------------------------------
  */
 
-
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Log4j2
 public class PaymentProducer {
+    KafkaTemplate<String, Object> kafkaTemplate;
+
+    public void sendPaymentConfirmation(PaymentConfirmation paymentConfirmation) {
+        Message<PaymentConfirmation> message = MessageBuilder
+                .withPayload(paymentConfirmation)
+                .setHeader(KafkaHeaders.TOPIC, "payment-success-topic")
+                .build();
+
+        kafkaTemplate.send(message);
+        log.info("Gửi sự kiện thanh toán thành công");
+    }
+
+    public void sendPaymentFail(PaymentConfirmation paymentConfirmation) {
+        Message<PaymentConfirmation> message = MessageBuilder
+                .withPayload(paymentConfirmation)
+                .setHeader(KafkaHeaders.TOPIC, "payment-fail-topic")
+                .build();
+
+        kafkaTemplate.send(message);
+        log.info("Gửi sự kiện thanh toán thất bại");
+    }
 }

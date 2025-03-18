@@ -17,5 +17,6 @@ public interface Endpoint {
         String REGISTER = "/register";
         String LOGIN = "/login";
         String FORGOT_PASSWORD = "/forgot-password";
+        String CHANGE_PASSWORD = "/change-password";
     }
 }

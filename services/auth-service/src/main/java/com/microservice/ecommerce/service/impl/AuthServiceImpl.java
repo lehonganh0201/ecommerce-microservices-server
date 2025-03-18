@@ -135,6 +135,55 @@ public class AuthServiceImpl implements AuthService {
         return new GlobalResponse<>(Status.SUCCESS, "Password reset email has been sent. Please check your email.");
     }
 
+    @Override
+    public GlobalResponse<String> changePassword(String username, String currentPassword, String newPassword) {
+        try {
+            String tokenUrl = keycloakProperties.serverUrl() + "/realms/" + keycloakProperties.realm() + "/protocol/openid-connect/token";
+
+            HttpHeaders tokenHeaders = new HttpHeaders();
+            tokenHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            MultiValueMap<String, String> tokenParams = new LinkedMultiValueMap<>();
+            tokenParams.add("client_id", keycloakProperties.clientId());
+            tokenParams.add("client_secret", keycloakProperties.clientSecret());
+            tokenParams.add("grant_type", "password");
+            tokenParams.add("username", username);
+            tokenParams.add("password", currentPassword);
+
+            HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(tokenParams, tokenHeaders);
+            ResponseEntity<Map> tokenResponse = restTemplate.postForEntity(tokenUrl, tokenRequest, Map.class);
+
+            if (!tokenResponse.getStatusCode().is2xxSuccessful()) {
+                return new GlobalResponse<>(Status.ERROR, "Sai mật khẩu hiện tại hoặc tài khoản không tồn tại.");
+            }
+
+            String accessToken = (String) tokenResponse.getBody().get("access_token");
+
+            String userId = getUserId(username);
+            String changePasswordUrl = keycloakProperties.serverUrl() + "/admin/realms/" + keycloakProperties.realm() + "/users/" + userId + "/reset-password";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(getAdminToken());
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, Object> credentials = new HashMap<>();
+            credentials.put("type", "password");
+            credentials.put("value", newPassword);
+            credentials.put("temporary", false);
+
+            HttpEntity<Map<String, Object>> changePasswordRequest = new HttpEntity<>(credentials, headers);
+
+            restTemplate.put(changePasswordUrl, changePasswordRequest);
+
+            return new GlobalResponse<>(Status.SUCCESS, "Đổi mật khẩu thành công!");
+
+        } catch (Exception e) {
+            log.error("Lỗi khi đổi mật khẩu cho user {}: {}", username, e.getMessage());
+            return new GlobalResponse<>(Status.ERROR, "Đổi mật khẩu thất bại. Vui lòng thử lại sau.");
+        }
+    }
+
+
     private String getAdminToken() {
         final String adminUrl = keycloakProperties.serverUrl() + "/realms/master/protocol/openid-connect/token";
         HttpHeaders headers = new HttpHeaders();

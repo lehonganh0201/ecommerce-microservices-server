@@ -26,6 +26,7 @@ public class SecurityConfig {
         http.csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/eureka/**").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/v1/auths/change-password").authenticated()
                         .pathMatchers("/api/v1/auths/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/v1/variants/**").permitAll()

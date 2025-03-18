@@ -33,6 +33,7 @@ public class SecurityConfig {
                                         "/swagger-ui.html",
                                         "/actuator/**"
                                 ).permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auths/change-password").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auths/**").permitAll()
                         .anyRequest().authenticated()
                 )

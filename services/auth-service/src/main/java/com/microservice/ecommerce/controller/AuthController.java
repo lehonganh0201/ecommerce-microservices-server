@@ -3,6 +3,7 @@ package com.microservice.ecommerce.controller;
 import com.microservice.ecommerce.constant.Endpoint;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.request.AuthRequest;
+import com.microservice.ecommerce.model.request.ChangePasswordRequest;
 import com.microservice.ecommerce.model.request.LoginRequest;
 import com.microservice.ecommerce.model.response.TokenResponse;
 import com.microservice.ecommerce.service.AuthService;
@@ -16,6 +17,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -84,5 +87,13 @@ public class AuthController {
     public ResponseEntity<GlobalResponse<String>> forgotPassword(@RequestBody Map<String, String> request) {
         String username = request.get("username");
         return ResponseEntity.ok(authService.forgotPassword(username));
+    }
+
+    @PostMapping(Endpoint.Auth.CHANGE_PASSWORD)
+    public ResponseEntity<GlobalResponse<String>> changePasswordSelfService(
+            @RequestBody @Valid ChangePasswordRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        GlobalResponse<String> response = authService.changePassword((String) jwt.getClaims().get("preferred_username"), request.currentPassword(), request.newPassword());
+        return ResponseEntity.ok(response);
     }
 }

@@ -21,4 +21,6 @@ public interface AuthService {
     GlobalResponse<TokenResponse> login(LoginRequest request);
 
     GlobalResponse<String> forgotPassword(String username);
+
+    GlobalResponse<String> changePassword(String username, String currentPassword, String newPassword);
 }

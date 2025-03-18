@@ -1,5 +1,6 @@
 package com.microservice.ecommerce.model.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
@@ -12,11 +13,13 @@ import jakarta.validation.constraints.NotBlank;
  * ----------------------------------------------------------------------------
  */
 
-
+@Schema(description = "Yêu cầu thông tin người dùng")
 public record UserRequest(
+        @Schema(description = "Số điện thoại người dùng", example = "0987654321")
         @NotBlank(message = "Phone number cannot be blank")
         String phoneNumber,
 
+        @Schema(description = "Thông tin địa chỉ người dùng")
         @Valid
         AddressRequest address
 ) {

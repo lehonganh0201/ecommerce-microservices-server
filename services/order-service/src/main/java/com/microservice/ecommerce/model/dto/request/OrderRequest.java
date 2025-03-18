@@ -1,12 +1,12 @@
 package com.microservice.ecommerce.model.dto.request;
 
 import com.microservice.ecommerce.constant.PaymentMethod;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * ----------------------------------------------------------------------------
@@ -17,15 +17,19 @@ import java.util.UUID;
  * ----------------------------------------------------------------------------
  */
 
-
+@Schema(description = "Yêu cầu tạo đơn hàng")
 public record OrderRequest(
+        @Schema(description = "Phương thức thanh toán", example = "MOMO")
         @NotNull(message = "Payment method is required")
         PaymentMethod paymentMethod,
 
+        @Schema(description = "Ngôn ngữ hiển thị trong giao dịch", example = "vi")
         String language,
 
+        @Schema(description = "Mã ngân hàng nếu thanh toán qua ngân hàng", example = "NCB")
         String bankCode,
 
+        @Schema(description = "Danh sách các sản phẩm trong đơn hàng")
         @NotEmpty(message = "Order must contain at least one item")
         @Valid
         List<OrderItemRequest> items

@@ -5,7 +5,12 @@ import com.microservice.ecommerce.model.dto.request.OrderRequest;
 import com.microservice.ecommerce.model.dto.response.OrderResponse;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.service.OrderService;
-import jakarta.servlet.http.HttpServletRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -34,40 +39,64 @@ import java.util.UUID;
 public class OrderController {
     OrderService orderService;
 
+    @Operation(summary = "Tạo đơn hàng mới", description = "Tạo đơn hàng dựa trên OrderRequest của người dùng đã xác thực.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Tạo đơn hàng thành công",
+                    content = @Content(schema = @Schema(implementation = GlobalResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Người dùng chưa xác thực", content = @Content)
+    })
     @PostMapping()
     public ResponseEntity<GlobalResponse<OrderResponse>> createOrder(
             @RequestBody @Valid OrderRequest request,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        return ResponseEntity
-                .ok(orderService.createOrder(request, jwt));
+        return ResponseEntity.ok(orderService.createOrder(request, jwt));
     }
 
+    @Operation(summary = "Lấy danh sách đơn hàng của người dùng", description = "Lấy danh sách các đơn hàng dựa trên trạng thái orderType.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công",
+                    content = @Content(schema = @Schema(implementation = GlobalResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Người dùng chưa xác thực", content = @Content)
+    })
     @GetMapping()
     public ResponseEntity<GlobalResponse<List<OrderResponse>>> getOwnOrders(
             @RequestParam(name = "orderType", required = false) String type,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        return ResponseEntity
-                .ok(orderService.findOwnOrders(type, jwt));
+        return ResponseEntity.ok(orderService.findOwnOrders(type, jwt));
     }
 
+    @Operation(summary = "Lấy chi tiết đơn hàng theo ID", description = "Lấy chi tiết đơn hàng dựa trên orderId.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy thông tin đơn hàng thành công",
+                    content = @Content(schema = @Schema(implementation = GlobalResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy đơn hàng", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Người dùng chưa xác thực", content = @Content)
+    })
     @GetMapping(Endpoint.Order.ORDER_ID)
     public ResponseEntity<GlobalResponse<OrderResponse>> getOrderById(
-            @PathVariable(name = "orderId")UUID orderId,
+            @PathVariable(name = "orderId") UUID orderId,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        return ResponseEntity
-                .ok(orderService.findOrderById(orderId, jwt));
+        return ResponseEntity.ok(orderService.findOrderById(orderId, jwt));
     }
 
+    @Operation(summary = "Hủy đơn hàng", description = "Hủy đơn hàng dựa trên orderId và trạng thái orderStatus.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Hủy đơn hàng thành công",
+                    content = @Content(schema = @Schema(implementation = GlobalResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy đơn hàng", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Trạng thái không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Người dùng chưa xác thực", content = @Content)
+    })
     @PutMapping(Endpoint.Order.ORDER_ID)
     public ResponseEntity<GlobalResponse<OrderResponse>> canceledOrder(
             @PathVariable(name = "orderId") UUID orderId,
             @RequestParam(name = "status") String orderStatus,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        return ResponseEntity
-                .ok(orderService.canceledOrderById(orderId, orderStatus, jwt));
+        return ResponseEntity.ok(orderService.canceledOrderById(orderId, orderStatus, jwt));
     }
 }

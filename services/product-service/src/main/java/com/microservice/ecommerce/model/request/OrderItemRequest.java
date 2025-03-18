@@ -1,5 +1,6 @@
 package com.microservice.ecommerce.model.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
@@ -14,16 +15,19 @@ import java.util.UUID;
  * ----------------------------------------------------------------------------
  */
 
-
+@Schema(description = "Yêu cầu thông tin sản phẩm trong đơn hàng")
 public record OrderItemRequest(
-        @NotNull(message = "Product ID cannot be null")
+        @Schema(description = "Mã sản phẩm", example = "123e4567-e89b-12d3-a456-426614174000")
+        @NotNull(message = "Mã sản phẩm không được để null")
         UUID productId,
 
-        @NotNull(message = "Product Variant ID cannot be null")
+        @Schema(description = "Mã biến thể sản phẩm", example = "123e4567-e89b-12d3-a456-426614174001")
+        @NotNull(message = "Mã biến thể sản phẩm không được để null")
         UUID variantId,
 
-        @Min(value = 1, message = "Quantity must be at least 1")
-        @NotNull(message = "Quantity is required")
+        @Schema(description = "Số lượng sản phẩm", example = "2")
+        @Min(value = 1, message = "Số lượng tối thiểu phải là 1")
+        @NotNull(message = "Số lượng không được để null")
         Integer quantity
 ) {
 }

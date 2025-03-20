@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -71,6 +72,20 @@ public class AuthController {
             @RequestBody @Valid LoginRequest request
     ) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @GetMapping(Endpoint.Auth.LOGIN)
+    public ResponseEntity<GlobalResponse<String>> login(HttpServletResponse response) {
+        return ResponseEntity
+            .ok(authService.loginWithGoogle(response));
+    }
+
+    @GetMapping(Endpoint.Auth.CALLBACK)
+    public ResponseEntity<GlobalResponse<TokenResponse>> loginWithGoogle(
+            @RequestParam("code") String code
+    ) {
+        return ResponseEntity
+                .ok(authService.handleGoogleCallback(code));
     }
 
     @Operation(

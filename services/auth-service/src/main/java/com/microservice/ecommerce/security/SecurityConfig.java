@@ -35,6 +35,7 @@ public class SecurityConfig {
                                 ).permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auths/change-password").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auths/**").permitAll()
+                .requestMatchers( HttpMethod.GET, "/api/v1/auths/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);

@@ -13,6 +13,7 @@ package com.microservice.ecommerce.model.response;
 public record TokenResponse(
         String accessToken,
         String refreshToken,
-        Long expiresIn
+        Long expiresIn,
+        String returnUrl
 ) {
 }

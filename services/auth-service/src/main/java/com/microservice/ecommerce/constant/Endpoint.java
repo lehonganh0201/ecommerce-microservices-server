@@ -18,5 +18,6 @@ public interface Endpoint {
         String LOGIN = "/login";
         String FORGOT_PASSWORD = "/forgot-password";
         String CHANGE_PASSWORD = "/change-password";
+        String CALLBACK = "/callback";
     }
 }

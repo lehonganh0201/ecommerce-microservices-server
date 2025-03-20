@@ -9,16 +9,21 @@ import com.microservice.ecommerce.model.request.LoginRequest;
 import com.microservice.ecommerce.model.response.TokenResponse;
 import com.microservice.ecommerce.service.AuthService;
 import com.microservice.ecommerce.util.EmailUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +52,14 @@ public class AuthServiceImpl implements AuthService {
     KeycloakProperties keycloakProperties;
 
     EmailUtil emailUtil;
+
+    @NonFinal
+    @Value("${application.url.callback}")
+    String callbackUrl;
+
+    @NonFinal
+    @Value("${application.url.returnUrl}")
+    String fontEndUrl;
 
     final String BEARER_PREFIX = "Bearer ";
 
@@ -117,13 +130,65 @@ public class AuthServiceImpl implements AuthService {
                     new TokenResponse(
                             (String) body.get("access_token"),
                             (String) body.get("refresh_token"),
-                            ((Number) body.get("expires_in")).longValue()
+                            ((Number) body.get("expires_in")).longValue(),
+                            null
                     )
             );
         }else {
             throw new AuthenticationException("Please try again, login fails");
         }
+    }
 
+    @Override
+    public GlobalResponse<String> loginWithGoogle(HttpServletResponse response) {
+
+        String encodedRedirectUri = URLEncoder.encode(callbackUrl, StandardCharsets.UTF_8);
+
+        String keycloakLoginUrl = keycloakProperties.serverUrl() + "/realms/" + keycloakProperties.realm() + "/protocol/openid-connect/auth"
+                + "?client_id=" + keycloakProperties.clientId()
+                + "&redirect_uri=" + encodedRedirectUri
+                + "&response_type=code"
+                + "&scope=openid%20profile%20email"
+                + "&kc_idp_hint=google";
+
+        return new GlobalResponse<>(
+                Status.SUCCESS,
+                keycloakLoginUrl
+        );
+    }
+
+    @Override
+    public GlobalResponse<TokenResponse> handleGoogleCallback(String code) {
+        final String url = keycloakProperties.serverUrl() + "/realms/" + keycloakProperties.realm() + "/protocol/openid-connect/token";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("client_id", keycloakProperties.clientId());
+        params.add("client_secret", keycloakProperties.clientSecret());
+        params.add("grant_type", "authorization_code");
+        params.add("code", code);
+        params.add("redirect_uri", callbackUrl);
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            Map<String, Object> body = response.getBody();
+
+            return new GlobalResponse<>(
+                    Status.SUCCESS,
+                    new TokenResponse(
+                            (String) body.get("access_token"),
+                            (String) body.get("refresh_token"),
+                            ((Number) body.get("expires_in")).longValue(),
+                            fontEndUrl
+                    )
+            );
+        } else {
+            throw new AuthenticationException("Login with Google failed, please try again.");
+        }
     }
 
     @Override

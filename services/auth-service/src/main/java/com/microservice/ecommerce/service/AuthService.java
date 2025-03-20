@@ -4,6 +4,7 @@ import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.request.AuthRequest;
 import com.microservice.ecommerce.model.request.LoginRequest;
 import com.microservice.ecommerce.model.response.TokenResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * ----------------------------------------------------------------------------
@@ -20,7 +21,11 @@ public interface AuthService {
 
     GlobalResponse<TokenResponse> login(LoginRequest request);
 
+    GlobalResponse<TokenResponse> handleGoogleCallback(String code);
+
     GlobalResponse<String> forgotPassword(String username);
 
     GlobalResponse<String> changePassword(String username, String currentPassword, String newPassword);
+
+    GlobalResponse<String> loginWithGoogle(HttpServletResponse response);
 }

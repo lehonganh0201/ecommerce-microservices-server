@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -25,5 +26,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             "AND (o.status = COALESCE(NULLIF(:status, ''), o.status))")
     List<Order> findAllByUserIdAndStatus(@Param("userId") String userId,
                                          @Param("status") String status);
+
+    Optional<Order> findByReference(String reference);
 
 }

@@ -99,4 +99,12 @@ public class OrderController {
     ) {
         return ResponseEntity.ok(orderService.canceledOrderById(orderId, orderStatus, jwt));
     }
+
+    @GetMapping(Endpoint.Order.REFERENCE)
+    public ResponseEntity<GlobalResponse<OrderResponse>> getOrderByReference(
+            @RequestParam(name = "reference") String reference,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity.ok(orderService.getByReference(reference, jwt));
+    }
 }

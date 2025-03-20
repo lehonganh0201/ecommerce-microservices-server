@@ -50,6 +50,7 @@ public class Order {
     OrderStatus status;
 
     @CreatedBy
+    @Column(nullable = false)
     String userId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)

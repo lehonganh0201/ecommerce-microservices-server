@@ -90,6 +90,7 @@ public class OrderServiceImpl implements OrderService {
                 .paymentMethod(request.paymentMethod())
                 .reference(GeneratorUtil.generatorReference())
                 .status(OrderStatus.PENDING)
+                .userId(jwt.getSubject())
                 .totalAmount(totalAmount)
                 .build());
 
@@ -214,6 +215,21 @@ public class OrderServiceImpl implements OrderService {
         }
 
         order = orderRepository.save(order);
+
+        return new GlobalResponse<>(
+                Status.SUCCESS,
+                getOrderResponse(List.of(order)).get(0)
+        );
+    }
+
+    @Override
+    public GlobalResponse<OrderResponse> getByReference(String reference, Jwt jwt) {
+        Order order = orderRepository.findByReference(reference)
+                .orElseThrow(() -> new EntityNotFoundException("Not found entity by reference"));
+
+        if (!order.getUserId().equals(jwt.getSubject())) {
+            throw new AuthorizationDeniedException("Bạn không có quyền thực hiện hành động này.");
+        }
 
         return new GlobalResponse<>(
                 Status.SUCCESS,

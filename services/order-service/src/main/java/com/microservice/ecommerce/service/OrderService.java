@@ -27,4 +27,6 @@ public interface OrderService {
     GlobalResponse<OrderResponse> findOrderById(UUID orderId, Jwt jwt);
 
     GlobalResponse<OrderResponse> canceledOrderById(UUID orderId, String orderStatus, Jwt jwt);
+
+    GlobalResponse<OrderResponse> getByReference(String reference, Jwt jwt);
 }

@@ -18,6 +18,7 @@ import com.microservice.ecommerce.model.dto.response.ProductPriceResponse;
 import com.microservice.ecommerce.model.entity.Order;
 import com.microservice.ecommerce.model.entity.OrderItem;
 import com.microservice.ecommerce.model.global.GlobalResponse;
+import com.microservice.ecommerce.model.global.PageResponse;
 import com.microservice.ecommerce.model.global.Status;
 import com.microservice.ecommerce.repository.OrderRepository;
 import com.microservice.ecommerce.service.OrderService;
@@ -27,14 +28,16 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -234,6 +237,65 @@ public class OrderServiceImpl implements OrderService {
         return new GlobalResponse<>(
                 Status.SUCCESS,
                 getOrderResponse(List.of(order)).get(0)
+        );
+    }
+
+    @Override
+    public GlobalResponse<PageResponse<OrderResponse>> findAllOrders(int page,
+                                                                     int size,
+                                                                     String sortedBy,
+                                                                     String sortDirection,
+                                                                     String status,
+                                                                     String customerId,
+                                                                     String paymentMethod,
+                                                                     Double minTotal,
+                                                                     Double maxTotal,
+                                                                     String productId,
+                                                                     String deliveryMethod,
+                                                                     LocalDateTime startDate,
+                                                                     LocalDateTime endDate) {
+        Sort sort = Sort.by(Sort.Direction.fromString(
+                sortDirection != null ? sortDirection.toUpperCase() : "ASC"),
+                sortedBy != null ? sortedBy : "createdDate");
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        OrderStatus orderStatus = null;
+        if (!Objects.isNull(status)) {
+            orderStatus = OrderStatus.valueOf(status);
+        }
+        PaymentMethod payment= null;
+        if (!Objects.isNull(paymentMethod)) {
+            payment = PaymentMethod.valueOf(paymentMethod);
+        }
+
+        Page<Order> orders = orderRepository.findAllOrders(
+                orderStatus,
+                customerId,
+                payment,
+                minTotal,
+                maxTotal,
+                productId,
+                deliveryMethod,
+                startDate,
+                endDate,
+                pageable
+        );
+
+        return new GlobalResponse<>(
+                Status.SUCCESS,
+                new PageResponse<>(
+                        getOrderResponse(orders.stream().toList()),
+                        orders.getTotalPages(),
+                        orders.getTotalElements(),
+                        orders.getNumber(),
+                        orders.getSize(),
+                        orders.getNumberOfElements(),
+                        orders.isFirst(),
+                        orders.isLast(),
+                        orders.hasNext(),
+                        orders.hasPrevious()
+                )
         );
     }
 

@@ -1,9 +1,11 @@
 package com.microservice.ecommerce.controller;
 
 import com.microservice.ecommerce.constant.Endpoint;
+import com.microservice.ecommerce.constant.OrderStatus;
 import com.microservice.ecommerce.model.dto.request.OrderRequest;
 import com.microservice.ecommerce.model.dto.response.OrderResponse;
 import com.microservice.ecommerce.model.global.GlobalResponse;
+import com.microservice.ecommerce.model.global.PageResponse;
 import com.microservice.ecommerce.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,11 +17,13 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -106,5 +110,27 @@ public class OrderController {
             @AuthenticationPrincipal Jwt jwt
     ) {
         return ResponseEntity.ok(orderService.getByReference(reference, jwt));
+    }
+
+    @GetMapping(Endpoint.Order.FIND_ALL)
+    public ResponseEntity<GlobalResponse<PageResponse<OrderResponse>>> findAllOrderResponse(
+            @RequestParam(name = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(name = "size", required = false, defaultValue = "10") int size,
+            @RequestParam(name = "sortedBy", required = false) String sortedBy,
+            @RequestParam(name = "sortDirection", required = false, defaultValue = "asc") String sortDirection,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "customerId", required = false) String customerId,
+            @RequestParam(name = "paymentMethod", required = false) String paymentMethod,
+            @RequestParam(name = "minTotal", required = false) Double minTotal,
+            @RequestParam(name = "maxTotal", required = false) Double maxTotal,
+            @RequestParam(name = "productId", required = false) String productId,
+            @RequestParam(name = "deliveryMethod", required = false) String deliveryMethod,
+            @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+        return ResponseEntity.ok(orderService.findAllOrders(
+                page, size, sortedBy, sortDirection, status,
+                customerId, paymentMethod, minTotal, maxTotal,
+                productId, deliveryMethod, startDate, endDate
+        ));
     }
 }

@@ -17,6 +17,7 @@ public interface Endpoint {
         String PREFIX = Endpoint.PREFIX + "/orders";
         String ORDER_ID = "/{orderId}";
         String REFERENCE = "/reference";
+        String FIND_ALL = "/all";
     }
 
     public interface Variant {

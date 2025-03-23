@@ -3,7 +3,3 @@ spring:
     name: analytics-service
   config:
     import: optional:configserver:http://localhost:8888
-
-application:
-  config:
-    order-service-url: http://localhost:8899/api/v1/orders

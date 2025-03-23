@@ -167,7 +167,8 @@ public class OrderServiceImpl implements OrderService {
                                         item.getPrice()
                                 ))
                         .collect(Collectors.toList()),
-                        paymentResponse
+                        paymentResponse,
+                        order.getCreatedDate()
                 )
         );
     }
@@ -313,7 +314,8 @@ public class OrderServiceImpl implements OrderService {
                                         item.getPrice()
                                 ))
                                 .collect(Collectors.toList()),
-                        null
+                        null,
+                        order.getCreatedDate()
                 ))
                 .collect(Collectors.toList());
     }

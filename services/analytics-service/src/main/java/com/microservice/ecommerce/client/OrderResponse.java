@@ -1,7 +1,9 @@
-package com.microservice.ecommerce.model.dto.response;
+package com.microservice.ecommerce.client;
 
 import com.microservice.ecommerce.constant.OrderStatus;
 import com.microservice.ecommerce.constant.PaymentMethod;
+import com.microservice.ecommerce.model.response.OrderItemResponse;
+import com.microservice.ecommerce.model.response.PaymentResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -9,7 +11,7 @@ import java.util.List;
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
- * Created on:    09/03/2025 at 5:40 PM
+ * Created on:    23/03/2025 at 11:08 PM
  * Project:       ecommerce-microservices
  * Contact:       https://github.com/lehonganh0201
  * ----------------------------------------------------------------------------

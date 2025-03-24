@@ -7,6 +7,7 @@ import com.microservice.ecommerce.model.dto.response.OrderResponse;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.PageResponse;
 import com.microservice.ecommerce.service.OrderService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -79,15 +80,15 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "Không tìm thấy đơn hàng", content = @Content),
             @ApiResponse(responseCode = "401", description = "Người dùng chưa xác thực", content = @Content)
     })
+    @Hidden
     @GetMapping(Endpoint.Order.ORDER_ID)
     public ResponseEntity<GlobalResponse<OrderResponse>> getOrderById(
-            @PathVariable(name = "orderId") UUID orderId,
-            @AuthenticationPrincipal Jwt jwt
+            @PathVariable(name = "orderId") UUID orderId
     ) {
-        return ResponseEntity.ok(orderService.findOrderById(orderId, jwt));
+        return ResponseEntity.ok(orderService.findOrderById(orderId));
     }
 
-    @Operation(summary = "Hủy đơn hàng", description = "Hủy đơn hàng dựa trên orderId và trạng thái orderStatus.")
+    @Operation(summary = "Thay đổi trạng thái đơn hàng", description = "Thay đổi trạng thái đơn hàng dựa trên orderId và trạng thái orderStatus.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Hủy đơn hàng thành công",
                     content = @Content(schema = @Schema(implementation = GlobalResponse.class))),
@@ -95,13 +96,13 @@ public class OrderController {
             @ApiResponse(responseCode = "400", description = "Trạng thái không hợp lệ", content = @Content),
             @ApiResponse(responseCode = "401", description = "Người dùng chưa xác thực", content = @Content)
     })
+    @Hidden
     @PutMapping(Endpoint.Order.ORDER_ID)
-    public ResponseEntity<GlobalResponse<OrderResponse>> canceledOrder(
+    public ResponseEntity<GlobalResponse<OrderResponse>> changeOrderStatus(
             @PathVariable(name = "orderId") UUID orderId,
-            @RequestParam(name = "status") String orderStatus,
-            @AuthenticationPrincipal Jwt jwt
+            @RequestParam(name = "status") String orderStatus
     ) {
-        return ResponseEntity.ok(orderService.canceledOrderById(orderId, orderStatus, jwt));
+        return ResponseEntity.ok(orderService.changeOrderStatus(orderId, orderStatus));
     }
 
     @GetMapping(Endpoint.Order.REFERENCE)

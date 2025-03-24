@@ -20,4 +20,8 @@ public interface Endpoint {
         String MOMO_NOTIFY = "/notify";
         String MOMO_CALLBACK = "/return";
     }
+
+    public interface Order {
+        String ORDER_ID = "/{orderId}";
+    }
 }

@@ -45,4 +45,7 @@ public class PaymentProducer {
         kafkaTemplate.send(message);
         log.info("Gửi sự kiện thanh toán thất bại");
     }
+
+    public void sendCallBackSuccess(PaymentEvent paymentEvent) {
+    }
 }

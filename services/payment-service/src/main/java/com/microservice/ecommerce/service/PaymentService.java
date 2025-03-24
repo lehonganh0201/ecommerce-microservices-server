@@ -4,6 +4,7 @@ import com.microservice.ecommerce.model.dto.request.PaymentRequest;
 import com.microservice.ecommerce.model.dto.response.PaymentResponse;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.Map;
 
@@ -24,5 +25,5 @@ public interface PaymentService {
 
     GlobalResponse<PaymentResponse> savePayment(PaymentRequest request);
 
-    GlobalResponse<String> paymentConfirmation(Map<String, String> requestParams);
+    GlobalResponse<String> paymentConfirmation(Map<String, String> requestParams, Jwt jwt);
 }

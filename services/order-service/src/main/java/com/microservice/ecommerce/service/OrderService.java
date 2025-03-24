@@ -26,9 +26,9 @@ public interface OrderService {
 
     GlobalResponse<List<OrderResponse>> findOwnOrders(String type, Jwt jwt);
 
-    GlobalResponse<OrderResponse> findOrderById(UUID orderId, Jwt jwt);
+    GlobalResponse<OrderResponse> findOrderById(UUID orderId);
 
-    GlobalResponse<OrderResponse> canceledOrderById(UUID orderId, String orderStatus, Jwt jwt);
+    GlobalResponse<OrderResponse> changeOrderStatus(UUID orderId, String orderStatus);
 
     GlobalResponse<OrderResponse> getByReference(String reference, Jwt jwt);
 

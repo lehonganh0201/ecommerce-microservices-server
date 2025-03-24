@@ -186,14 +186,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public GlobalResponse<OrderResponse> findOrderById(UUID orderId, Jwt jwt) {
-        String userId = jwt.getSubject();
+    public GlobalResponse<OrderResponse> findOrderById(UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn hàng"));
-
-        if (!order.getUserId().equals(userId)) {
-            throw new AuthorizationDeniedException("Bạn không có quyền thực hiện hành động này.");
-        }
 
         return new GlobalResponse<>(
                 Status.SUCCESS,
@@ -202,14 +197,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public GlobalResponse<OrderResponse> canceledOrderById(UUID orderId, String orderStatus , Jwt jwt) {
-        String userId = jwt.getSubject();
+    public GlobalResponse<OrderResponse> changeOrderStatus(UUID orderId, String orderStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn hàng"));
 
-        if (!order.getUserId().equals(userId)) {
-            throw new AuthorizationDeniedException("Bạn không có quyền thực hiện hành động này.");
-        }
 
         try {
             OrderStatus statusEnum = OrderStatus.valueOf(orderStatus.toUpperCase());

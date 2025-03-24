@@ -1,8 +1,13 @@
 package com.microservice.ecommerce.service.impl;
 
+import com.microservice.ecommerce.client.OrderResponse;
+import com.microservice.ecommerce.client.PaymentClient;
 import com.microservice.ecommerce.config.ConfigVNPay;
 import com.microservice.ecommerce.config.MoMoEnvironment;
+import com.microservice.ecommerce.constant.PaymentMethod;
 import com.microservice.ecommerce.constant.RequestType;
+import com.microservice.ecommerce.message.PaymentConfirmation;
+import com.microservice.ecommerce.message.PaymentEvent;
 import com.microservice.ecommerce.message.PaymentProducer;
 import com.microservice.ecommerce.model.dto.request.PaymentRequest;
 import com.microservice.ecommerce.model.entity.Payment;
@@ -18,6 +23,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
@@ -45,6 +51,11 @@ public class PaymentServiceImpl implements PaymentService {
 
     PaymentProducer paymentProducer;
 
+    PaymentClient paymentClient;
+
+    private static final String MOMO_SUCCESS_STATUS = "0";
+    private static final String VNPAY_SUCCESS_STATUS = "00";
+
 
     @Override
     public GlobalResponse<com.microservice.ecommerce.model.dto.response.PaymentResponse> saveMoMoPayment(PaymentRequest request) throws Exception {
@@ -57,7 +68,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         String partnerClientId = "partnerClientId";
         String orderInfo = "Pay With MoMo";
-        String returnURL = "http://localhost:8086/api/v1/payments/return";
+        String returnURL = "http://localhost:8086/api/v1/payments/callback";
         String notifyURL = "http://localhost:8086/api/v1/payments/notify";
         String callbackToken = "callbackToken";
         String token = "";
@@ -186,9 +197,21 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public GlobalResponse<String> paymentConfirmation(Map<String, String> requestParams) {
+    public GlobalResponse<String> paymentConfirmation(Map<String, String> requestParams, Jwt jwt) {
+        String momo_status = requestParams.get("resultCode");
+        String vnpay_status = requestParams.get("vnp_TransactionStatus");
 
-        return null;
+        if (momo_status != null && momo_status.equals(MOMO_SUCCESS_STATUS)) {
+            String orderId = requestParams.get("orderId");
+            Long amount = Long.parseLong(requestParams.get("amount"));
+            return processPaymentSuccess(orderId, PaymentMethod.MOMO, jwt, amount);
+        } else if (vnpay_status != null && vnpay_status.equals(VNPAY_SUCCESS_STATUS)) {
+            String orderId = requestParams.get("vnp_TxnRef");
+            Long amount = Long.parseLong(requestParams.get("vnp_Amount"));
+            return processPaymentSuccess(orderId, PaymentMethod.VN_PAY, jwt, amount);
+        }
+
+        return new GlobalResponse<>(Status.ERROR, "Thanh toán thất bại");
     }
 
     private com.microservice.ecommerce.model.dto.response.PaymentResponse savePayment(PaymentRequest request, UUID paymentId){
@@ -198,5 +221,25 @@ public class PaymentServiceImpl implements PaymentService {
         payment = paymentRepository.save(payment);
 
         return paymentMapper.toPaymentResponse(payment);
+    }
+
+    private GlobalResponse<String> processPaymentSuccess(String orderId, PaymentMethod method, Jwt jwt, Long amount) {
+        OrderResponse response = paymentClient.findOrderById(UUID.fromString(orderId)).getBody().data();
+
+        PaymentConfirmation confirmation = new PaymentConfirmation(
+                jwt.getClaimAsString("email"),
+                jwt.getClaimAsString("name"),
+                amount,
+                response.reference()
+        );
+
+        paymentProducer.sendPaymentConfirmation(confirmation);
+        paymentProducer.sendCallBackSuccess(new PaymentEvent(
+                UUID.fromString(orderId),
+                method,
+                "PAID"
+        ));
+
+        return new GlobalResponse<>(Status.SUCCESS, "Thanh toán thành công");
     }
 }

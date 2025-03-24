@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -61,10 +63,11 @@ public class PaymentController {
 
     @GetMapping(Endpoint.Payment.CALLBACK)
     public ResponseEntity<GlobalResponse<String>> handleVNPayCallback(
-            @RequestParam Map<String, String> requestParams
-    ) {
-        log.info("Received VNPAY callback: {}", requestParams);
-        return ResponseEntity.ok(paymentService.paymentConfirmation(requestParams));
+            @RequestParam Map<String, String> requestParams,
+            @AuthenticationPrincipal Jwt jwt
+            ) {
+        log.info("Received transaction callback: {}", requestParams);
+        return ResponseEntity.ok(paymentService.paymentConfirmation(requestParams, jwt));
     }
 //
 //    @PostMapping(Endpoint.Payment.MOMO_NOTIFY)

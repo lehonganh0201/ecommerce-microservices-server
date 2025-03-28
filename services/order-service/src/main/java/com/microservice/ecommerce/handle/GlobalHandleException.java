@@ -1,11 +1,13 @@
-package com.microservice.ecommerce.handler;
+package com.microservice.ecommerce.handle;
 
+import com.microservice.ecommerce.exception.BusinessException;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.Status;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,23 +19,14 @@ import java.util.Map;
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
- * Created on:    06/03/2025 at 1:32 AM
+ * Created on:    28/03/2025 at 12:15 PM
  * Project:       ecommerce-microservices
  * Contact:       https://github.com/lehonganh0201
  * ----------------------------------------------------------------------------
  */
 
 @RestControllerAdvice
-public class GlobalHandlerException {
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<GlobalResponse<String>> handlerEntityNotFoundException(EntityNotFoundException ex) {
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(new GlobalResponse<>(
-                        Status.ERROR,
-                        ex.getMessage()
-                ));
-    }
+public class GlobalHandleException {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<GlobalResponse<Map<String, String>>> handleValidationException(MethodArgumentNotValidException ex) {
@@ -75,5 +68,35 @@ public class GlobalHandlerException {
                 Status.ERROR,
                 errors
         ));
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<GlobalResponse<String>> handleException(EntityNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(new GlobalResponse<>(
+                        Status.ERROR,
+                        ex.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<GlobalResponse<String>> handleException(BusinessException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new GlobalResponse<>(
+                        Status.ERROR,
+                        ex.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<GlobalResponse<String>> handleException(AuthorizationDeniedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new GlobalResponse<>(
+                        Status.ERROR,
+                        ex.getMessage()
+                ));
     }
 }

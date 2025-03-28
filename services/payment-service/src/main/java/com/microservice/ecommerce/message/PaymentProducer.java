@@ -46,6 +46,13 @@ public class PaymentProducer {
         log.info("Gửi sự kiện thanh toán thất bại");
     }
 
-    public void sendCallBackSuccess(PaymentEvent paymentEvent) {
+    public void sendOrderCallBack(PaymentEvent paymentEvent) {
+        Message<PaymentEvent> message = MessageBuilder
+                .withPayload(paymentEvent)
+                .setHeader(KafkaHeaders.TOPIC, "change-order-topic")
+                .build();
+
+        kafkaTemplate.send(message);
+        log.info("Gửi sự kiện thanh toán thành công");
     }
 }

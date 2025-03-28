@@ -201,14 +201,16 @@ public class PaymentServiceImpl implements PaymentService {
         String momo_status = requestParams.get("resultCode");
         String vnpay_status = requestParams.get("vnp_TransactionStatus");
 
-        if (momo_status != null && momo_status.equals(MOMO_SUCCESS_STATUS)) {
-            String orderId = requestParams.get("orderId");
-            Long amount = Long.parseLong(requestParams.get("amount"));
-            return processPaymentSuccess(orderId, PaymentMethod.MOMO, jwt, amount);
-        } else if (vnpay_status != null && vnpay_status.equals(VNPAY_SUCCESS_STATUS)) {
-            String orderId = requestParams.get("vnp_TxnRef");
-            Long amount = Long.parseLong(requestParams.get("vnp_Amount"));
-            return processPaymentSuccess(orderId, PaymentMethod.VN_PAY, jwt, amount);
+        if (isSuccess(momo_status, MOMO_SUCCESS_STATUS)) {
+            return handleSuccessPayment(requestParams, PaymentMethod.MOMO, jwt, "orderId", "amount");
+        } else if (isCanceled(momo_status, MOMO_SUCCESS_STATUS)) {
+            return handleCanceledPayment(requestParams, PaymentMethod.MOMO, "orderId");
+        }
+
+        if (isSuccess(vnpay_status, VNPAY_SUCCESS_STATUS)) {
+            return handleSuccessPayment(requestParams, PaymentMethod.VN_PAY, jwt, "vnp_TxnRef", "vnp_Amount");
+        } else if (isCanceled(vnpay_status, VNPAY_SUCCESS_STATUS)) {
+            return handleCanceledPayment(requestParams, PaymentMethod.VN_PAY, "vnp_TxnRef");
         }
 
         return new GlobalResponse<>(Status.ERROR, "Thanh toán thất bại");
@@ -234,12 +236,57 @@ public class PaymentServiceImpl implements PaymentService {
         );
 
         paymentProducer.sendPaymentConfirmation(confirmation);
-        paymentProducer.sendCallBackSuccess(new PaymentEvent(
+        paymentProducer.sendOrderCallBack(new PaymentEvent(
                 UUID.fromString(orderId),
                 method,
                 "PAID"
         ));
 
         return new GlobalResponse<>(Status.SUCCESS, "Thanh toán thành công");
+    }
+
+    /**
+     * Kiểm tra trạng thái thanh toán thành công
+     */
+    private boolean isSuccess(String status, String successCode) {
+        return status != null && status.equals(successCode);
+    }
+
+    /**
+     * Kiểm tra trạng thái thanh toán thất bại
+     */
+    private boolean isCanceled(String status, String successCode) {
+        return status != null && !status.equals(successCode);
+    }
+
+    /**
+     * Xử lý thanh toán thành công
+     */
+    private GlobalResponse<String> handleSuccessPayment(Map<String, String> requestParams, PaymentMethod method, Jwt jwt, String orderIdKey, String amountKey) {
+        String orderId = requestParams.get(orderIdKey);
+        String amountStr = requestParams.get(amountKey);
+
+        if (orderId == null || amountStr == null) {
+            return new GlobalResponse<>(Status.ERROR, "Thiếu thông tin thanh toán");
+        }
+
+        Long amount = Long.parseLong(amountStr);
+        return processPaymentSuccess(orderId, method, jwt, amount);
+    }
+
+    private GlobalResponse<String> handleCanceledPayment(Map<String, String> requestParams, PaymentMethod method, String orderIdKey) {
+        String orderId = requestParams.get(orderIdKey);
+
+        if (orderId == null) {
+            return new GlobalResponse<>(Status.ERROR, "Thiếu thông tin đơn hàng");
+        }
+
+        paymentProducer.sendOrderCallBack(new PaymentEvent(
+                UUID.fromString(orderId),
+                method,
+                "CANCELED"
+        ));
+
+        return new GlobalResponse<>(Status.ERROR, "Thanh toán thất bại");
     }
 }

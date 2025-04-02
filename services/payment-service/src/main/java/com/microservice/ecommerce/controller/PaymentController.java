@@ -63,11 +63,10 @@ public class PaymentController {
 
     @GetMapping(Endpoint.Payment.CALLBACK)
     public ResponseEntity<GlobalResponse<String>> handleVNPayCallback(
-            @RequestParam Map<String, String> requestParams,
-            @AuthenticationPrincipal Jwt jwt
+            @RequestParam Map<String, String> requestParams
             ) {
         log.info("Received transaction callback: {}", requestParams);
-        return ResponseEntity.ok(paymentService.paymentConfirmation(requestParams, jwt));
+        return ResponseEntity.ok(paymentService.paymentConfirmation(requestParams));
     }
 //
 //    @PostMapping(Endpoint.Payment.MOMO_NOTIFY)

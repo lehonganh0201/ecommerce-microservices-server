@@ -1,5 +1,8 @@
 package com.microservice.ecommerce.constant;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
@@ -13,5 +16,15 @@ package com.microservice.ecommerce.constant;
 public enum PaymentMethod {
     MOMO,
     VN_PAY,
-    COD // Cash on delivery
+    COD; // Cash on delivery
+
+    @JsonCreator
+    public static PaymentMethod fromString(String value) {
+        return PaymentMethod.valueOf(value.toUpperCase());
+    }
+
+    @JsonValue
+    public String toString() {
+        return this.name();
+    }
 }

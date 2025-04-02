@@ -1,7 +1,6 @@
 package com.microservice.ecommerce.controller;
 
 import com.microservice.ecommerce.constant.Endpoint;
-import com.microservice.ecommerce.constant.OrderStatus;
 import com.microservice.ecommerce.model.dto.request.OrderRequest;
 import com.microservice.ecommerce.model.dto.response.OrderResponse;
 import com.microservice.ecommerce.model.global.GlobalResponse;
@@ -11,13 +10,13 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -41,6 +40,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RequestMapping(Endpoint.Order.PREFIX)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Log4j2
 public class OrderController {
     OrderService orderService;
 
@@ -56,6 +56,7 @@ public class OrderController {
             @RequestBody @Valid OrderRequest request,
             @AuthenticationPrincipal Jwt jwt
     ) {
+        log.info("Received OrderRequest: {}", request);
         return ResponseEntity.ok(orderService.createOrder(request, jwt));
     }
 

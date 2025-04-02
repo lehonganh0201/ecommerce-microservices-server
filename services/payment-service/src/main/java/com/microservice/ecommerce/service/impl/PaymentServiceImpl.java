@@ -26,6 +26,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -103,12 +104,12 @@ public class PaymentServiceImpl implements PaymentService {
                                                                                                           HttpServletRequest httpServletRequest) {
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
-        String orderType = "other";
-        long amount = (long) (request.amount() * 100);
+        String orderType = "order-type";
+        long amount = (long) (request.amount() * 100000);
         String bankCode = request.bankCode();
 
-//        String vnp_TxnRef = ConfigVNPay.getRandomNumber(8);
-        String vnp_TxnRef = request.orderId().toString();
+        String vnp_TxnRef = ConfigVNPay.getRandomNumber(8);
+        String orderInfor = request.orderId().toString();
         String vnp_IpAddr = ConfigVNPay.getIpAddress(httpServletRequest);
         String vnp_TmnCode = ConfigVNPay.vnp_TmnCode;
 
@@ -123,11 +124,11 @@ public class PaymentServiceImpl implements PaymentService {
             vnp_Params.put("vnp_BankCode", bankCode);
         }
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang: " + vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", orderInfor);
         vnp_Params.put("vnp_OrderType", orderType);
 
         String locate = request.language();
-        vnp_Params.put("vnp_Locale", (locate != null && !locate.isEmpty()) ? locate : "vn");
+        vnp_Params.put("vnp_Locale", "vn");
 
         vnp_Params.put("vnp_ReturnUrl", ConfigVNPay.vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
@@ -141,37 +142,37 @@ public class PaymentServiceImpl implements PaymentService {
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
-        List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
+        List fieldNames = new ArrayList(vnp_Params.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
         StringBuilder query = new StringBuilder();
-
-        for (String fieldName : fieldNames) {
-            String fieldValue = vnp_Params.get(fieldName);
-            if (fieldValue != null && !fieldValue.isEmpty()) {
-                hashData.append(fieldName).append('=')
-                        .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII))
-                        .append('=')
-                        .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
-                query.append('&');
-                hashData.append('&');
+        Iterator itr = fieldNames.iterator();
+        while (itr.hasNext()) {
+            String fieldName = (String) itr.next();
+            String fieldValue = (String) vnp_Params.get(fieldName);
+            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                //Build hash data
+                hashData.append(fieldName);
+                hashData.append('=');
+                try {
+                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                    //Build query
+                    query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
+                    query.append('=');
+                    query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                if (itr.hasNext()) {
+                    query.append('&');
+                    hashData.append('&');
+                }
             }
         }
-
-        if (query.length() > 0) {
-            query.setLength(query.length() - 1);
-            hashData.setLength(hashData.length() - 1);
-        }
-
+        String queryUrl = query.toString();
         String vnp_SecureHash = ConfigVNPay.hmacSHA512(ConfigVNPay.vnp_SecretKey, hashData.toString());
-        query.append("&vnp_SecureHash=").append(vnp_SecureHash);
-        String paymentUrl = ConfigVNPay.vnp_PayUrl + "?" + query;
-
-        Map<String, String> response = new HashMap<>();
-        response.put("code", "00");
-        response.put("message", "success");
-        response.put("data", paymentUrl);
+        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+        String paymentUrl = ConfigVNPay.vnp_PayUrl + "?" + queryUrl;
 
         com.microservice.ecommerce.model.dto.response.PaymentResponse paymentResponse = savePayment(request, UUID.randomUUID());
         paymentResponse.setPaymentUrl(paymentUrl);
@@ -197,20 +198,20 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public GlobalResponse<String> paymentConfirmation(Map<String, String> requestParams, Jwt jwt) {
+    public GlobalResponse<String> paymentConfirmation(Map<String, String> requestParams) {
         String momo_status = requestParams.get("resultCode");
         String vnpay_status = requestParams.get("vnp_TransactionStatus");
 
         if (isSuccess(momo_status, MOMO_SUCCESS_STATUS)) {
-            return handleSuccessPayment(requestParams, PaymentMethod.MOMO, jwt, "orderId", "amount");
+            return handleSuccessPayment(requestParams, PaymentMethod.MOMO, "orderId", "amount");
         } else if (isCanceled(momo_status, MOMO_SUCCESS_STATUS)) {
             return handleCanceledPayment(requestParams, PaymentMethod.MOMO, "orderId");
         }
 
         if (isSuccess(vnpay_status, VNPAY_SUCCESS_STATUS)) {
-            return handleSuccessPayment(requestParams, PaymentMethod.VN_PAY, jwt, "vnp_TxnRef", "vnp_Amount");
+            return handleSuccessPayment(requestParams, PaymentMethod.VN_PAY, "vnp_OrderInfo", "vnp_Amount");
         } else if (isCanceled(vnpay_status, VNPAY_SUCCESS_STATUS)) {
-            return handleCanceledPayment(requestParams, PaymentMethod.VN_PAY, "vnp_TxnRef");
+            return handleCanceledPayment(requestParams, PaymentMethod.VN_PAY, "vnp_OrderInfo");
         }
 
         return new GlobalResponse<>(Status.ERROR, "Thanh toán thất bại");
@@ -225,12 +226,12 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentMapper.toPaymentResponse(payment);
     }
 
-    private GlobalResponse<String> processPaymentSuccess(String orderId, PaymentMethod method, Jwt jwt, Long amount) {
+    private GlobalResponse<String> processPaymentSuccess(String orderId, PaymentMethod method, Long amount) {
         OrderResponse response = paymentClient.findOrderById(UUID.fromString(orderId)).getBody().data();
 
         PaymentConfirmation confirmation = new PaymentConfirmation(
-                jwt.getClaimAsString("email"),
-                jwt.getClaimAsString("name"),
+                "hle646698@gmail.com",
+                "Le Hong Anh",
                 amount,
                 response.reference()
         );
@@ -262,7 +263,7 @@ public class PaymentServiceImpl implements PaymentService {
     /**
      * Xử lý thanh toán thành công
      */
-    private GlobalResponse<String> handleSuccessPayment(Map<String, String> requestParams, PaymentMethod method, Jwt jwt, String orderIdKey, String amountKey) {
+    private GlobalResponse<String> handleSuccessPayment(Map<String, String> requestParams, PaymentMethod method, String orderIdKey, String amountKey) {
         String orderId = requestParams.get(orderIdKey);
         String amountStr = requestParams.get(amountKey);
 
@@ -271,7 +272,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         Long amount = Long.parseLong(amountStr);
-        return processPaymentSuccess(orderId, method, jwt, amount);
+        return processPaymentSuccess(orderId, method, amount);
     }
 
     private GlobalResponse<String> handleCanceledPayment(Map<String, String> requestParams, PaymentMethod method, String orderIdKey) {

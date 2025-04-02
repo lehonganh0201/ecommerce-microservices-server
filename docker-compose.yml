@@ -15,20 +15,20 @@ services:
       - ecommerce-microservices-net
     restart: unless-stopped
 
-  pgadmin:
-    container_name: em_pgadmin  # PostgreSQL Admin UI
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    volumes:
-      - pgadmin:/var/lib/pgadmin
-    ports:
-      - 5050:80
-    networks:
-      - ecommerce-microservices-net
-    restart: unless-stopped
+#  pgadmin:
+#    container_name: em_pgadmin  # PostgreSQL Admin UI
+#    image: dpage/pgadmin4
+#    environment:
+#      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@pgadmin.org}
+#      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+#      PGADMIN_CONFIG_SERVER_MODE: 'False'
+#    volumes:
+#      - pgadmin:/var/lib/pgadmin
+#    ports:
+#      - 5050:80
+#    networks:
+#      - ecommerce-microservices-net
+#    restart: unless-stopped
 
   mongodb:
     container_name: em_mongo_db  # MongoDB NoSQL Database
@@ -43,18 +43,18 @@ services:
     networks:
       - ecommerce-microservices-net
 
-  mongo-express:
-    container_name: em_mongo_express  # MongoDB Admin UI
-    image: mongo-express
-    restart: unless-stopped
-    ports:
-      - 8081:8081
-    environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=lehonganh
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=lehonganh
-      - ME_CONFIG_MONGODB_SERVER=mongodb
-    networks:
-      - ecommerce-microservices-net
+#  mongo-express:
+#    container_name: em_mongo_express  # MongoDB Admin UI
+#    image: mongo-express
+#    restart: unless-stopped
+#    ports:
+#      - 8081:8081
+#    environment:
+#      - ME_CONFIG_MONGODB_ADMINUSERNAME=lehonganh
+#      - ME_CONFIG_MONGODB_ADMINPASSWORD=lehonganh
+#      - ME_CONFIG_MONGODB_SERVER=mongodb
+#    networks:
+#      - ecommerce-microservices-net
 
   # ========================== MESSAGE BROKER SERVICES ==========================
   zookeeper:

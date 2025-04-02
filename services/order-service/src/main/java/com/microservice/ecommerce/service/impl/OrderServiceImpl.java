@@ -64,9 +64,13 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public GlobalResponse<OrderResponse> createOrder(OrderRequest request, Jwt jwt) {
         log.info("RECEIVE ORDER CREATE: {}", request.items());
-        boolean isStockAvailable = productClient.checkStock(request.items()).getBody();
+        try{
+            boolean isStockAvailable = productClient.checkStock(request.items()).getBody();
 
-        if (!isStockAvailable) {
+            if (!isStockAvailable) {
+                throw new BusinessException("Không đủ hàng trong kho.");
+            }
+        }catch (Exception ex) {
             throw new BusinessException("Không đủ hàng trong kho.");
         }
 

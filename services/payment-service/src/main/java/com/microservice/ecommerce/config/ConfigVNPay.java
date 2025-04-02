@@ -41,7 +41,7 @@ public class ConfigVNPay {
         vnp_TmnCode = vnpTmnCode;
         vnp_SecretKey = secretKey;
         vnp_PayUrl = vnpPayUrl;
-        vnpReturnUrl=vnp_ReturnUrl;
+        vnp_ReturnUrl=vnpReturnUrl;
     }
 
     public static String getRandomNumber(int length) {

@@ -30,6 +30,8 @@ public class SecurityConfig {
                         .pathMatchers("/api/v1/auths/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/v1/variants/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/v1/orders/**").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/v1/variants/check-stock").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/v1/products/search/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .anyExchange().authenticated()

@@ -25,5 +25,5 @@ public interface PaymentService {
 
     GlobalResponse<PaymentResponse> savePayment(PaymentRequest request);
 
-    GlobalResponse<String> paymentConfirmation(Map<String, String> requestParams, Jwt jwt);
+    GlobalResponse<String> paymentConfirmation(Map<String, String> requestParams);
 }

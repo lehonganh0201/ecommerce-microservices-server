@@ -99,6 +99,7 @@ public class OrderServiceImpl implements OrderService {
                 .status(OrderStatus.PENDING)
                 .userId(jwt.getSubject())
                 .totalAmount(totalAmount)
+                .addressId(request.addressId())
                 .build());
 
         List<OrderItem> orderItems = new ArrayList<>();

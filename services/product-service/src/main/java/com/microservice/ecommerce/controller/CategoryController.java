@@ -16,6 +16,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -43,6 +44,7 @@ public class CategoryController {
             @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content)
     })
     @PostMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<CategoryResponse>> createCategory(
             @RequestBody @Valid CategoryRequest request
     ) {
@@ -70,6 +72,7 @@ public class CategoryController {
             @ApiResponse(responseCode = "404", description = "Không tìm thấy danh mục", content = @Content)
     })
     @PutMapping(Endpoint.Category.CATEGORY_ID)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<CategoryResponse>> updateCategory(
             @PathVariable(name = "categoryId") UUID categoryId,
             @RequestBody @Valid CategoryRequest request
@@ -84,6 +87,7 @@ public class CategoryController {
             @ApiResponse(responseCode = "404", description = "Không tìm thấy danh mục", content = @Content)
     })
     @DeleteMapping(Endpoint.Category.CATEGORY_ID)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<String>> deleteCategory(
             @PathVariable(name = "categoryId") UUID categoryId
     ) {

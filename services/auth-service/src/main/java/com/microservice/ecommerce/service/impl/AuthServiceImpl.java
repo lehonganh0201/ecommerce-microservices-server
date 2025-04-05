@@ -16,6 +16,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.configurationprocessor.json.JSONArray;
+import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -97,6 +100,19 @@ public class AuthServiceImpl implements AuthService {
 
         String userId = getUserId(request.username());
 
+        String roleId = null;
+        try {
+            roleId = getRoleId("USER");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            assignRoleToUser(userId, roleId);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         emailUtil.sendVerificationEmail(userId);
 
         return new GlobalResponse<>(
@@ -104,6 +120,38 @@ public class AuthServiceImpl implements AuthService {
                 "Create user successfully!"
         );
     }
+
+    private void assignRoleToUser(String userId, String roleId) throws JSONException {
+        String url = keycloakProperties.serverUrl() + "/admin/realms/" + keycloakProperties.realm() + "/users/" + userId + "/role-mappings/realm";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(AUTHORIZATION, BEARER_PREFIX + getAdminToken());
+        headers.setContentType(APPLICATION_JSON);
+
+        JSONArray roleArray = new JSONArray();
+        JSONObject roleObject = new JSONObject();
+        roleObject.put("id", roleId);
+        roleObject.put("name", "USER");
+        roleArray.put(roleObject);
+
+        HttpEntity<String> entity = new HttpEntity<>(roleArray.toString(), headers);
+        restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+    }
+
+
+    private String getRoleId(String roleName) throws JSONException {
+        String url = keycloakProperties.serverUrl() + "/admin/realms/" + keycloakProperties.realm() + "/roles/" + roleName;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(AUTHORIZATION, BEARER_PREFIX + getAdminToken());
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+
+        JSONObject role = new JSONObject(response.getBody());
+        return role.getString("id");
+    }
+
 
     @Override
     public GlobalResponse<TokenResponse> login(LoginRequest request) {

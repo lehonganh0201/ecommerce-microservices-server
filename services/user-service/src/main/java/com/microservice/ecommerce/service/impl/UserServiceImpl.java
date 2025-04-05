@@ -20,6 +20,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
@@ -101,10 +102,7 @@ public class UserServiceImpl implements UserService {
             );
         }
 
-        return new GlobalResponse<>(
-                Status.ERROR,
-                null
-        );
+        throw new AuthorizationDeniedException("Not found current user");
     }
 
     @Override

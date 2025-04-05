@@ -8,6 +8,8 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValueCheckStrategy;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import java.util.List;
+
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
@@ -24,4 +26,6 @@ public interface AddressMapper {
     Address toAddress(AddressRequest request);
     AddressResponse toAddressResponse(Address address);
     void updateAddress(AddressRequest request, @MappingTarget Address address);
+
+    List<AddressResponse> toDtoList(List<Address> addresses);
 }

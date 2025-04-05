@@ -41,6 +41,8 @@ public class Order {
 
     String reference;
 
+    Integer addressId;
+
     Double totalAmount;
 
     @Enumerated(value = EnumType.STRING)

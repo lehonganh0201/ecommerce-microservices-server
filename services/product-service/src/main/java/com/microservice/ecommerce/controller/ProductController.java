@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,6 +38,7 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content)
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<ProductResponse>> createProduct(
             @ModelAttribute @Valid ProductRequest request
     ) {
@@ -93,6 +95,7 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Không tìm thấy sản phẩm để cập nhật", content = @Content)
     })
     @PutMapping(value = Endpoint.Product.PRODUCT_ID, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<ProductResponse>> updateProduct(
             @PathVariable(name = "productId") UUID productId,
             @ModelAttribute ProductRequest request
@@ -106,6 +109,7 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Không tìm thấy sản phẩm", content = @Content)
     })
     @PutMapping(Endpoint.Product.UPLOAD)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<ProductResponse>> uploadImage(
             @PathVariable(name = "productId") UUID productId,
             @RequestParam("images") List<MultipartFile> images

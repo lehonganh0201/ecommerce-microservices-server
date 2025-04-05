@@ -19,6 +19,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -115,6 +116,7 @@ public class OrderController {
     }
 
     @GetMapping(Endpoint.Order.FIND_ALL)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<PageResponse<OrderResponse>>> findAllOrderResponse(
             @RequestParam(name = "page", required = false, defaultValue = "0") int page,
             @RequestParam(name = "size", required = false, defaultValue = "10") int size,

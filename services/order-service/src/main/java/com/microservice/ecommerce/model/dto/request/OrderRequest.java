@@ -23,6 +23,10 @@ public record OrderRequest(
         @NotNull(message = "Payment method is required")
         PaymentMethod paymentMethod,
 
+        @Schema(description = "Địa chỉ của người nhận")
+        @NotNull(message = "Address is required")
+        Integer addressId,
+
         @Schema(description = "Ngôn ngữ hiển thị trong giao dịch", example = "vi")
         String language,
 

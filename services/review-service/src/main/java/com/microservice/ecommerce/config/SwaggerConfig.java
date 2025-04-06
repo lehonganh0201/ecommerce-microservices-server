@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
- * Created on:    16/03/2025 at 7:10 PM
+ * Created on:    16/03/2025 at 7:37 PM
  * Project:       ecommerce-microservices
  * Contact:       https://github.com/lehonganh0201
  * ----------------------------------------------------------------------------
@@ -28,8 +28,8 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Auth Service API")
-                        .description("API quản lý xác thực trong hệ thống E-commerce Microservices")
+                        .title("Review Service API")
+                        .description("API quản lý đánh giá trong hệ thống E-commerce Microservices")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("Hong Anh")
@@ -37,16 +37,17 @@ public class SwaggerConfig {
                                 .email("le2960620@gmail.com")
                         )
                 )
-                        .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
-                        .components(new io.swagger.v3.oas.models.Components()
-                                .addSecuritySchemes(SECURITY_SCHEME_NAME,
-                                        new SecurityScheme()
-                                                .name(SECURITY_SCHEME_NAME)
-                                                .type(Type.HTTP)
-                                                .scheme("bearer")
-                                                .bearerFormat("JWT")
-                                                .in(In.HEADER)
-                                )
-                        );
+                .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
+                .components(new io.swagger.v3.oas.models.Components()
+                        .addSecuritySchemes(SECURITY_SCHEME_NAME,
+                                new SecurityScheme()
+                                        .name(SECURITY_SCHEME_NAME)
+                                        .type(Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .in(In.HEADER)
+                        )
+                );
     }
 }
+

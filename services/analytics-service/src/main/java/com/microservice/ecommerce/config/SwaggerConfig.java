@@ -28,8 +28,8 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Auth Service API")
-                        .description("API quản lý xác thực trong hệ thống E-commerce Microservices")
+                        .title("Analytics Service API")
+                        .description("API thống kê trong hệ thống E-commerce Microservices")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("Hong Anh")
@@ -37,16 +37,16 @@ public class SwaggerConfig {
                                 .email("le2960620@gmail.com")
                         )
                 )
-                        .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
-                        .components(new io.swagger.v3.oas.models.Components()
-                                .addSecuritySchemes(SECURITY_SCHEME_NAME,
-                                        new SecurityScheme()
-                                                .name(SECURITY_SCHEME_NAME)
-                                                .type(Type.HTTP)
-                                                .scheme("bearer")
-                                                .bearerFormat("JWT")
-                                                .in(In.HEADER)
-                                )
-                        );
+                .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
+                .components(new io.swagger.v3.oas.models.Components()
+                        .addSecuritySchemes(SECURITY_SCHEME_NAME,
+                                new SecurityScheme()
+                                        .name(SECURITY_SCHEME_NAME)
+                                        .type(Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .in(In.HEADER)
+                        )
+                );
     }
 }

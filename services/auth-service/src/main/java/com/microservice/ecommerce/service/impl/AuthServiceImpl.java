@@ -206,6 +206,44 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public GlobalResponse<TokenResponse> refreshToken(String refreshToken) {
+        final String url = keycloakProperties.serverUrl() + "/realms/" + keycloakProperties.realm() + "/protocol/openid-connect/token";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("client_id", keycloakProperties.clientId());
+        params.add("client_secret", keycloakProperties.clientSecret());
+        params.add("grant_type", "refresh_token");
+        params.add("refresh_token", refreshToken);
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                Map<String, Object> body = response.getBody();
+                return new GlobalResponse<>(
+                        Status.SUCCESS,
+                        new TokenResponse(
+                                (String) body.get("access_token"),
+                                (String) body.get("refresh_token"),
+                                ((Number) body.get("expires_in")).longValue(),
+                                null
+                        )
+                );
+            } else {
+                log.error("Failed to refresh token: Status {}", response.getStatusCode());
+                throw new AuthenticationException("Failed to refresh token, please try again.");
+            }
+        } catch (Exception e) {
+            log.error("Error refreshing token: {}", e.getMessage());
+            throw new AuthenticationException("Invalid or expired refresh token.");
+        }
+    }
+
+    @Override
     public GlobalResponse<TokenResponse> handleGoogleCallback(String code) {
         final String url = keycloakProperties.serverUrl() + "/realms/" + keycloakProperties.realm() + "/protocol/openid-connect/token";
 
@@ -315,7 +353,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String getUserId(String username) {
-        final String url = keycloakProperties.serverUrl() + "/admin/realms/" + keycloakProperties.realm() + "/users?username=" + username;
+        String url = keycloakProperties.serverUrl() + "/admin/realms/" + keycloakProperties.realm() + "/users?username=" + username;
 
         HttpHeaders headers = new HttpHeaders();
         headers.set(AUTHORIZATION, BEARER_PREFIX + getAdminToken());
@@ -327,6 +365,15 @@ public class AuthServiceImpl implements AuthService {
             Map<String, Object> user = (Map<String, Object>) response.getBody().get(0);
             return (String) user.get("id");
         }
-        throw new RuntimeException("User not found in Keycloak");
+        url = keycloakProperties.serverUrl() + "/admin/realms/" + keycloakProperties.realm() + "/users?email=" + username;
+
+        response = restTemplate.exchange(url, HttpMethod.GET, entity, List.class);
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null && !response.getBody().isEmpty()) {
+            Map<String, Object> user = (Map<String, Object>) response.getBody().get(0);
+            return (String) user.get("id");
+        }
+
+        throw new RuntimeException("User not found in Keycloak with provided username or email");
     }
 }

@@ -7,6 +7,7 @@ import com.microservice.ecommerce.model.request.ChangePasswordRequest;
 import com.microservice.ecommerce.model.request.LoginRequest;
 import com.microservice.ecommerce.model.response.TokenResponse;
 import com.microservice.ecommerce.service.AuthService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -100,8 +101,8 @@ public class AuthController {
     })
     @PostMapping(Endpoint.Auth.FORGOT_PASSWORD)
     public ResponseEntity<GlobalResponse<String>> forgotPassword(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-        return ResponseEntity.ok(authService.forgotPassword(username));
+        String identifier = request.get("identifier");
+        return ResponseEntity.ok(authService.forgotPassword(identifier));
     }
 
     @PostMapping(Endpoint.Auth.CHANGE_PASSWORD)
@@ -110,5 +111,21 @@ public class AuthController {
             @AuthenticationPrincipal Jwt jwt) {
         GlobalResponse<String> response = authService.changePassword((String) jwt.getClaims().get("preferred_username"), request.currentPassword(), request.newPassword());
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Làm mới token",
+            description = "Sử dụng refresh token để tạo access token mới."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Làm mới token thành công",
+                    content = @Content(schema = @Schema(implementation = GlobalResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Refresh token không hợp lệ", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Lỗi server", content = @Content)
+    })
+    @PostMapping(Endpoint.Auth.REFRESH_TOKEN)
+    public ResponseEntity<GlobalResponse<TokenResponse>> refreshToken(@RequestBody Map<String, String> request) {
+        String refreshToken = request.get("refresh_token");
+        return ResponseEntity.ok(authService.refreshToken(refreshToken));
     }
 }

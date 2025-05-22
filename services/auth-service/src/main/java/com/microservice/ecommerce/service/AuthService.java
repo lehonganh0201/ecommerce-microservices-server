@@ -28,4 +28,6 @@ public interface AuthService {
     GlobalResponse<String> changePassword(String username, String currentPassword, String newPassword);
 
     GlobalResponse<String> loginWithGoogle(HttpServletResponse response);
+
+    GlobalResponse<TokenResponse> refreshToken(String refreshToken);
 }

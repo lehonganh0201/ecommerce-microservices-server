@@ -31,6 +31,13 @@
         <java.version>17</java.version>
         <spring-boot.version>3.4.3</spring-boot.version>
         <spring-cloud.version>2024.0.1</spring-cloud.version>
+        <lombok.version>1.18.36</lombok.version>
+        <springdoc.version>2.8.0</springdoc.version> <!-- Nâng cấp cho Spring Boot 3.4.3 -->
+        <mapstruct.version>1.6.2</mapstruct.version> <!-- Nâng cấp cho tương thích -->
+        <flyway.version>10.22.0</flyway.version> <!-- Phù hợp với Spring Boot 3.4.3 -->
+        <json.version>20240303</json.version> <!-- Cho org.json:json -->
+        <micrometer-tracing.version>1.4.0</micrometer-tracing.version> <!-- Phù hợp với Spring Boot 3.4.3 -->
+        <zipkin-reporter.version>3.5.0</zipkin-reporter.version> <!-- Phù hợp với Spring Boot 3.4.3 -->
     </properties>
 
     <dependencyManagement>
@@ -52,22 +59,40 @@
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>1.18.36</version>
+                <version>${lombok.version}</version>
                 <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-                <version>2.6.0</version> <!-- Phù hợp với Spring Boot 3.2.x -->
+                <version>${springdoc.version}</version> <!-- Phù hợp với Spring Boot 3.2.x -->
             </dependency>
 
             <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.json</groupId>
+                <artifactId>json</artifactId>
+                <version>${json.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-tracing-bridge-brave</artifactId>
+                <version>${micrometer-tracing.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.zipkin.reporter2</groupId>
                 <artifactId>zipkin-reporter-brave</artifactId>
+                <version>${zipkin-reporter.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

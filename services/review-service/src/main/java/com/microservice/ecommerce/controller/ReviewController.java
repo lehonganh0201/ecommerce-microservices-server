@@ -50,11 +50,11 @@ public class ReviewController {
             @RequestParam(name = "size", required = false, defaultValue = "20") int size,
             @RequestParam(name = "sortedBy", required = false) String sortedBy,
             @RequestParam(name = "sortDirection", required = false, defaultValue = "desc") String sortDirection,
-            @RequestParam(name = "minRating", required = false) int minRating,
-            @RequestParam(name = "maxRating", required = false) int maxRating
+            @RequestParam(name = "minRating", required = false, defaultValue = "0") int minRating,
+            @RequestParam(name = "maxRating", required = false, defaultValue = "5") int maxRating
     ) {
         return ResponseEntity
-                .ok(reviewService.getReviewByProduct(productId, page, size, sortedBy, sortDirection,null, minRating, maxRating));
+                .ok(reviewService.getReviewByProduct(productId, size, page, sortedBy, sortDirection,null, minRating, maxRating));
     }
 
     @GetMapping(Endpoint.Review.AVERAGE_RATING)

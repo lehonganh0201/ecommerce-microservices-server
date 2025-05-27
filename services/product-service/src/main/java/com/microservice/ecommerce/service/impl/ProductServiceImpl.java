@@ -183,7 +183,12 @@ public class ProductServiceImpl implements ProductService {
                     var response = productMapper.toProductResponse(product);
 
                     List<ProductImageResponse> imageResponses = product.getImages().stream()
-                            .map(imageMapper::toProductImageResponse)
+                            .map(productImage -> {
+                                ProductImageResponse imageResponse = imageMapper.toProductImageResponse(productImage);
+                                imageResponse.setImageUrl(ROOT_DIRECTORY + imageResponse.getImageUrl());
+
+                                return imageResponse;
+                            })
                             .collect(Collectors.toList());
 
                     response.setImages(imageResponses);

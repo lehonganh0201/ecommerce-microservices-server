@@ -2,6 +2,7 @@ package com.microservice.ecommerce.service.impl;
 
 import com.microservice.ecommerce.model.dto.request.ReviewRequest;
 import com.microservice.ecommerce.model.dto.response.AverageRatingResponse;
+import com.microservice.ecommerce.model.dto.response.RatingResult;
 import com.microservice.ecommerce.model.dto.response.ReviewResponse;
 import com.microservice.ecommerce.model.entity.Review;
 import com.microservice.ecommerce.model.global.GlobalResponse;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -113,10 +115,10 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public GlobalResponse<AverageRatingResponse> getAverageRating(UUID productId) {
-        Object[] result = reviewRepository.findAverageRatingAndCount(productId);
+        RatingResult result = reviewRepository.findAverageRatingAndCount(productId);
 
-        Double averageRating = (Double) result[0];
-        Long reviewCount = (Long) result[1];
+        Double averageRating = result.averageRating() != null ? result.averageRating() : 0;
+        Long reviewCount = result.reviewCount();
 
         return new GlobalResponse<>(
                 Status.SUCCESS,

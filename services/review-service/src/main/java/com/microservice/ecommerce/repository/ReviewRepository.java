@@ -1,5 +1,6 @@
 package com.microservice.ecommerce.repository;
 
+import com.microservice.ecommerce.model.dto.response.RatingResult;
 import com.microservice.ecommerce.model.entity.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,8 +23,8 @@ import java.util.UUID;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
-    @Query("SELECT AVG(r.rating), COUNT(r) FROM Review r WHERE r.productId = :productId")
-    Object[] findAverageRatingAndCount(@Param("productId") UUID productId);
+    @Query("SELECT new com.microservice.ecommerce.model.dto.response.RatingResult(CAST(AVG(r.rating) AS double), COUNT(r)) FROM Review r WHERE r.productId = :productId")
+    RatingResult findAverageRatingAndCount(@Param("productId") UUID productId);
 
     Page<Review> findByProductIdAndRatingBetween(UUID productId, int minRating, int maxRating, Pageable pageable);
 }

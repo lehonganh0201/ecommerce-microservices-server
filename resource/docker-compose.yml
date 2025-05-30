@@ -1,0 +1,32 @@
+services:
+  config-server:
+    container_name: config-server
+    image: lehonganh0201/config-server:latest
+    ports:
+      - "8888:8888"
+    networks:
+      - ecommerce-network
+
+  discovery-service:
+    container_name: discovery-service
+    image: lehonganh0201/discovery-service:latest
+    ports:
+      - "8761:8761"
+    depends_on:
+      - config-server
+    networks:
+      - ecommerce-network
+
+  auth-service:
+    container_name: auth-service
+    image: lehonganh0201/auth-service:latest
+    ports:
+      - "8082:8082"
+    depends_on:
+      - config-server
+      - discovery-service
+    networks:
+      - ecommerce-network
+networks:
+  ecommerce-network:
+    driver: bridge

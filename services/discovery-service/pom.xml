@@ -42,6 +42,13 @@
                 <configuration>
                     <mainClass>com.microservice.ecommerce.DiscoveryServiceApplication</mainClass> <!-- Thay bằng tên class chính nếu cần -->
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal> <!-- Đảm bảo tạo JAR thực thi -->
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

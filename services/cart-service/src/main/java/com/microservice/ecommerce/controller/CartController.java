@@ -8,12 +8,13 @@ import com.microservice.ecommerce.service.CartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -34,6 +35,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping(Endpoint.Cart.PREFIX)
+@Log4j2
 public class CartController {
     CartService cartService;
 
@@ -46,9 +48,10 @@ public class CartController {
     })
     @PostMapping()
     public ResponseEntity<GlobalResponse<CartResponse>> addCartItemToCart(
-            @RequestBody(description = "Thông tin sản phẩm cần thêm vào giỏ hàng", required = true) CartRequest cartItem,
+            @RequestBody @Valid CartRequest cartItem,
             @AuthenticationPrincipal Jwt jwt
     ) {
+        log.info("Received CartRequest: {}", cartItem);
         return ResponseEntity.ok(cartService.addToCart(cartItem, UUID.fromString(jwt.getSubject())));
     }
 

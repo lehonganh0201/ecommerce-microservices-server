@@ -30,6 +30,9 @@ public class ProductResponse {
     Integer stock;
     String creatorName;
     LocalDateTime createdDate;
+    Boolean isActive;
+    UUID categoryId;
+    String categoryName;
     List<ProductVariantResponse> variants;
     List<ProductImageResponse> images;
 }

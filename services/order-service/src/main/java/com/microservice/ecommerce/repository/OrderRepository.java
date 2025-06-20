@@ -29,8 +29,9 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     @Query("SELECT o FROM Order o WHERE o.userId = :userId " +
             "AND (o.status = COALESCE(NULLIF(:status, ''), o.status))")
-    List<Order> findAllByUserIdAndStatus(@Param("userId") String userId,
-                                         @Param("status") String status);
+    Page<Order> findAllByUserIdAndStatus(@Param("userId") String userId,
+                                         @Param("status") String status,
+                                         Pageable pageable);
 
     Optional<Order> findByReference(String reference);
 

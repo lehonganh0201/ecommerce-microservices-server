@@ -4,6 +4,7 @@ import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.request.UserRequest;
 import com.microservice.ecommerce.model.response.UserResponse;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * ----------------------------------------------------------------------------
@@ -21,4 +22,6 @@ public interface UserService {
     GlobalResponse<UserResponse> findCurrentUser(Jwt jwt);
 
     GlobalResponse<UserResponse> updateUser(Integer addressId, UserRequest request, Jwt jwt);
+
+    GlobalResponse<?> uploadAvatar(Jwt jwt, MultipartFile avatar);
 }

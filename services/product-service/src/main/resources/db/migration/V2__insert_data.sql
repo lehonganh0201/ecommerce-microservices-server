@@ -1,16 +1,16 @@
 -- Thêm danh mục sản phẩm (quần áo và phụ kiện thời trang)
-INSERT INTO categories (id, name, description, created_at, updated_at)
+INSERT INTO categories (id, name, description, image_url, created_at, updated_at)
 VALUES
-(gen_random_uuid(), 'Áo thun', 'Áo thun nam và nữ, phong cách casual', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Quần jeans', 'Quần jeans thời trang cho nam và nữ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Áo sơ mi', 'Áo sơ mi công sở và casual', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Váy', 'Váy thời trang nữ, đa dạng kiểu dáng', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Phụ kiện thời trang', 'Mũ, khăn, thắt lưng, túi xách và phụ kiện khác', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Giày', 'Giày thời trang nam và nữ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Áo khoác', 'Áo khoác mùa đông và thời trang', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Quần short', 'Quần short năng động cho nam và nữ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Đồ thể thao', 'Trang phục thể thao, gym và yoga', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Đồ lót', 'Đồ lót nam và nữ, thoải mái và thời trang', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+(gen_random_uuid(), 'Áo thun', 'Áo thun nam và nữ, phong cách casual', 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749045987/6-1544032750_dkxp2h.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Quần jeans', 'Quần jeans thời trang cho nam và nữ', 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046070/4054_4_7de9b1d90a764bc5bd11b854fd3eb6a1_hss5fd.webp', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Áo sơ mi', 'Áo sơ mi công sở và casual', 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046126/images_hinf9f.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Váy', 'Váy thời trang nữ, đa dạng kiểu dáng', 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046225/pngtree-original-hand-drawn-dignified-red-evening-dress-dress-clothing-cartoon-elements-png-image_2626171_aqnwoc.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Phụ kiện thời trang', 'Mũ, khăn, thắt lưng, túi xách và phụ kiện khác', 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046286/images_imy7kn.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Giày', 'Giày thời trang nam và nữ', 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046353/pngtree-casual-shoes-png-image_2394294_bpylyn.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Áo khoác', 'Áo khoác mùa đông và thời trang', 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046427/ao-khoac-nam-kaki-png-4-new_ldmlbk.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Quần short', 'Quần short năng động cho nam và nữ', 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046463/images_the5mw.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Đồ thể thao', 'Trang phục thể thao, gym và yoga', 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046501/download_m7txep.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Đồ lót', 'Đồ lót nam và nữ, thoải mái và thời trang', 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046505/images_b7oavm.jpg', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Thêm sản phẩm (quần áo và phụ kiện)
 INSERT INTO products (id, name, description, price, category_id, creator_name, created_by, created_date, last_modified_date, is_active)
@@ -38,45 +38,45 @@ VALUES
 
 -- Thêm ảnh sản phẩm
 INSERT INTO product_images (id, image_url, product_id)
-SELECT gen_random_uuid(), '\resource\images\product-images\unisex-tshirt.jpg', id FROM products WHERE name = 'Áo thun unisex basic'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046595/download_mlmyrg.jpg', id FROM products WHERE name = 'Áo thun unisex basic'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\polo-shirt.jpg', id FROM products WHERE name = 'Áo thun polo nam'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046599/download_wggq3x.jpg', id FROM products WHERE name = 'Áo thun polo nam'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\jeans-slim-fit.jpg', id FROM products WHERE name = 'Quần jeans slim fit nam'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046651/download_ceymwt.jpg', id FROM products WHERE name = 'Quần jeans slim fit nam'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\jeans-flare.jpg', id FROM products WHERE name = 'Quần jeans nữ ống loe'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046692/download_h5gfgm.jpg', id FROM products WHERE name = 'Quần jeans nữ ống loe'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\white-shirt.jpg', id FROM products WHERE name = 'Áo sơ mi trắng công sở'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046706/so-mi-trang-co-tui_bum2na.png', id FROM products WHERE name = 'Áo sơ mi trắng công sở'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\checkered-shirt.jpg', id FROM products WHERE name = 'Áo sơ mi nữ caro'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046710/download_r4vlcs.jpg', id FROM products WHERE name = 'Áo sơ mi nữ caro'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\maxi-dress.jpg', id FROM products WHERE name = 'Váy maxi bohemian'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046812/pngtree-bohemian-style-maxi-skirt-with-accessories-png-image_21011188_cnaztr.png', id FROM products WHERE name = 'Váy maxi bohemian'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\body-dress.jpg', id FROM products WHERE name = 'Váy body công sở'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046824/dam-om-body-cong-so-phoi-that-lung-kk162-21_r4zg1m.webp', id FROM products WHERE name = 'Váy body công sở'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\baseball-cap.jpg', id FROM products WHERE name = 'Mũ lưỡi trai thời trang'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046844/pngtree-brown-cap-fashion-hat-front-view-png-image_13321509_hhl2xf.png', id FROM products WHERE name = 'Mũ lưỡi trai thời trang'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\leather-bag.jpg', id FROM products WHERE name = 'Túi xách da nữ'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046847/download_kohxca.jpg', id FROM products WHERE name = 'Túi xách da nữ'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\white-sneaker.jpg', id FROM products WHERE name = 'Giày sneaker trắng'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046885/download_aodxmo.jpg', id FROM products WHERE name = 'Giày sneaker trắng'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\high-heels.jpg', id FROM products WHERE name = 'Giày cao gót nữ'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046868/download_vmx405.jpg', id FROM products WHERE name = 'Giày cao gót nữ'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\bomber-jacket.jpg', id FROM products WHERE name = 'Áo khoác bomber'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046898/download_wcybhn.jpg', id FROM products WHERE name = 'Áo khoác bomber'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\parka-jacket.jpg', id FROM products WHERE name = 'Áo khoác parka mùa đông'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046892/download_qmcz2r.jpg', id FROM products WHERE name = 'Áo khoác parka mùa đông'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\khaki-shorts.jpg', id FROM products WHERE name = 'Quần short kaki nam'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749046967/images_mxyfoi.jpg', id FROM products WHERE name = 'Quần short kaki nam'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\denim-shorts.jpg', id FROM products WHERE name = 'Quần short nữ denim'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749047010/quan-shorts-mlb-denim-new-york-yankees-3fdph0133-50sbl-mau-xanh-nhat-64116dd1de5ad-15032023140345-1680518622148_s8rwqj.jpg', id FROM products WHERE name = 'Quần short nữ denim'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\gym-shirt.jpg', id FROM products WHERE name = 'Áo tập gym nam'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749047020/download_zqgguv.jpg', id FROM products WHERE name = 'Áo tập gym nam'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\legging-yoga.jpg', id FROM products WHERE name = 'Quần legging nữ'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749047052/download_huqoyf.jpg', id FROM products WHERE name = 'Quần legging nữ'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\mens-underwear.jpg', id FROM products WHERE name = 'Áo lót nam cotton'
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749047048/download_p8jqsg.jpg', id FROM products WHERE name = 'Áo lót nam cotton'
 UNION ALL
-SELECT gen_random_uuid(), '\resource\images\product-images\lace-underwear.jpg', id FROM products WHERE name = 'Đồ lót nữ ren';
+SELECT gen_random_uuid(), 'https://res.cloudinary.com/dmno1bjyt/image/upload/v1749047059/download_ang2z8.jpg', id FROM products WHERE name = 'Đồ lót nữ ren';
 
 -- Thêm biến thể sản phẩm (variants)
 INSERT INTO variants (id, stock, price, product_id)
@@ -130,8 +130,7 @@ SELECT gen_random_uuid(), 'COLOR', 'Navy', id FROM variants WHERE product_id = (
 UNION ALL
 SELECT gen_random_uuid(), 'SIZE', 'L', id FROM variants WHERE product_id = (SELECT id FROM products WHERE name = 'Áo thun polo nam')
 UNION ALL
-SELECT gen_random_uuid(), 'COLOR', 'Blue', id FROM variants WHERE product_id = (SELECT id FROM products WHERE name = 'Quソー
-Quần jeans slim fit nam')
+SELECT gen_random_uuid(), 'COLOR', 'Blue', id FROM variants WHERE product_id = (SELECT id FROM products WHERE name = 'Quần jeans slim fit nam')
 UNION ALL
 SELECT gen_random_uuid(), 'SIZE', '32', id FROM variants WHERE product_id = (SELECT id FROM products WHERE name = 'Quần jeans slim fit nam')
 UNION ALL

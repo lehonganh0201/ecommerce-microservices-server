@@ -4,6 +4,7 @@ import com.microservice.ecommerce.constant.Endpoint;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.PageResponse;
 import com.microservice.ecommerce.model.request.ProductRequest;
+import com.microservice.ecommerce.model.request.UpdateProductRequest;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import com.microservice.ecommerce.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -98,7 +99,7 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<ProductResponse>> updateProduct(
             @PathVariable(name = "productId") UUID productId,
-            @ModelAttribute ProductRequest request
+            @ModelAttribute UpdateProductRequest request
     ) {
         return ResponseEntity.ok(productService.updateProduct(productId, request));
     }
@@ -115,5 +116,13 @@ public class ProductController {
             @RequestParam("images") List<MultipartFile> images
     ) {
         return ResponseEntity.ok(productService.uploadImage(productId, images));
+    }
+
+    @PutMapping(Endpoint.Product.STATUS)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<GlobalResponse<ProductResponse>> changeStatus(
+            @PathVariable(name = "productId") UUID productId
+    ) {
+        return ResponseEntity.ok(productService.changeStatusForProduct(productId));
     }
 }

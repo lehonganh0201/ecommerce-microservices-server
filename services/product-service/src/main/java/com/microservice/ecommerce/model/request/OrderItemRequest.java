@@ -17,10 +17,6 @@ import java.util.UUID;
 
 @Schema(description = "Yêu cầu thông tin sản phẩm trong đơn hàng")
 public record OrderItemRequest(
-        @Schema(description = "Mã sản phẩm", example = "123e4567-e89b-12d3-a456-426614174000")
-        @NotNull(message = "Mã sản phẩm không được để null")
-        UUID productId,
-
         @Schema(description = "Mã biến thể sản phẩm", example = "123e4567-e89b-12d3-a456-426614174001")
         @NotNull(message = "Mã biến thể sản phẩm không được để null")
         UUID variantId,

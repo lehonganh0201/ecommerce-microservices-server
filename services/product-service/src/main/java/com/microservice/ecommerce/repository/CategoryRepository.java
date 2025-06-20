@@ -30,4 +30,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
     );
 
     boolean existsById(UUID id);
+
+    @Query("SELECT c FROM Category c JOIN c.products p WHERE p.id = :productId")
+    Category findByProductId(@Param("productId") UUID productId);
 }

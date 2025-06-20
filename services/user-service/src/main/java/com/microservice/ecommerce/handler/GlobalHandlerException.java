@@ -4,6 +4,7 @@ import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.Status;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -25,6 +26,7 @@ import java.util.Map;
  */
 
 @RestControllerAdvice
+@Log4j2
 public class GlobalHandlerException {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<GlobalResponse<String>> handlerEntityNotFoundException(EntityNotFoundException ex) {
@@ -54,6 +56,8 @@ public class GlobalHandlerException {
                 errors.put(error.getField(), error.getDefaultMessage())
         );
 
+        log.error("Error in MethodArgumentNotValidException");
+
         return ResponseEntity.badRequest().body(new GlobalResponse<>(
                 Status.ERROR,
                 errors
@@ -68,6 +72,8 @@ public class GlobalHandlerException {
                 errors.put(violation.getPropertyPath().toString(), violation.getMessage())
         );
 
+        log.error("Error in ConstraintViolationException");
+
         return ResponseEntity.badRequest().body(new GlobalResponse<>(
                 Status.ERROR,
                 errors
@@ -81,6 +87,8 @@ public class GlobalHandlerException {
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
         );
+
+        log.error("Error in BindException");
 
         return ResponseEntity.badRequest().body(new GlobalResponse<>(
                 Status.ERROR,

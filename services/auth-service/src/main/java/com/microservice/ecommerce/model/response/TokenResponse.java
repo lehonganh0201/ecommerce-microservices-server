@@ -1,5 +1,7 @@
 package com.microservice.ecommerce.model.response;
 
+import java.util.List;
+
 /**
  * ----------------------------------------------------------------------------
  * Author:        Hong Anh
@@ -14,6 +16,7 @@ public record TokenResponse(
         String accessToken,
         String refreshToken,
         Long expiresIn,
-        String returnUrl
+        String returnUrl,
+        List<String> roles
 ) {
 }

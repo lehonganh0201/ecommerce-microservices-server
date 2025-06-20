@@ -3,6 +3,12 @@ package com.microservice.ecommerce.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * ----------------------------------------------------------------------------
@@ -26,14 +32,17 @@ public class User {
     @Column(nullable = false, unique = true, updatable = false)
     String id;
 
-    @Column(nullable = false, unique = true, updatable = false)
-    String username;
-
-    @Column(nullable = false, unique = true)
-    String email;
-
     String phoneNumber;
 
-    @ManyToOne
-    Role role;
+    String avatarUrl;
+
+    Boolean gender;
+
+    LocalDate dateOfBirth;
+
+    @CreationTimestamp
+    Timestamp createdAt;
+
+    @UpdateTimestamp
+    Timestamp updatedAt;
 }

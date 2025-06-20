@@ -29,7 +29,7 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.AUTO)
     UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     UUID productId;
 
     @Column(nullable = false)

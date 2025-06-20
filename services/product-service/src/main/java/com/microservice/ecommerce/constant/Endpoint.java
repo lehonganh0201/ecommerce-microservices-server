@@ -18,11 +18,13 @@ public interface Endpoint {
         String PRODUCT_ID = "/{productId}";
         String UPLOAD = PRODUCT_ID + "/upload";
         String SEARCH = "/search";
+        String STATUS = PRODUCT_ID + "/status";
     }
 
     public interface Category {
         String PREFIX = Endpoint.PREFIX + "/categories";
         String CATEGORY_ID = "/{categoryId}";
+        String UPLOAD = CATEGORY_ID + "/upload";
     }
 
     public interface ProductVariant {
@@ -32,5 +34,12 @@ public interface Endpoint {
         String CHECK_STOCK = "/check-stock";
         String UPDATE_STOCK = "/update-stock";
         String GET_PRICE = "/get-prices";
+    }
+
+    public interface ProductAttribute {
+        String PREFIX = Endpoint.PREFIX + "/attributes";
+        String ATTRIBUTE_ID = "/{id}";
+        String VARIANT = "/variant/{variantId}";
+        String SEARCH = "/search";
     }
 }

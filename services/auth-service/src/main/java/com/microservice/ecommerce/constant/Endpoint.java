@@ -21,4 +21,7 @@ public interface Endpoint {
         String CALLBACK = "/callback";
         String REFRESH_TOKEN = "/token";
     }
+
+    public interface User {
+    }
 }

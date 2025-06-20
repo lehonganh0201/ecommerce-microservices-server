@@ -32,11 +32,6 @@ public record ProductRequest(
         @Min(value = 0, message = "Giá sản phẩm phải lớn hơn hoặc bằng 0")
         Double price,
 
-        @Schema(description = "Số lượng tồn kho", example = "100")
-        @NotNull(message = "Số lượng tồn kho không được null")
-        @Min(value = 0, message = "Số lượng tồn kho phải lớn hơn hoặc bằng 0")
-        Integer stock,
-
         @Schema(description = "Mã danh mục sản phẩm", example = "123e4567-e89b-12d3-a456-426614174000")
         @NotNull(message = "Danh mục sản phẩm không được null")
         UUID categoryId,

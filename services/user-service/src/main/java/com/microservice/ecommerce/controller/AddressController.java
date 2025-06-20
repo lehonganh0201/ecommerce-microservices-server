@@ -57,7 +57,7 @@ public class AddressController {
                 .ok(addressService.getOwnAddress(jwt));
     }
 
-    @GetMapping(Endpoint.Address.PREFIX)
+    @GetMapping(Endpoint.Address.ADDRESS_ID)
     public ResponseEntity<GlobalResponse<?>> findById(
             @PathVariable(name = "addressId") Integer addressId,
             @AuthenticationPrincipal Jwt jwt

@@ -41,6 +41,8 @@ public class Category {
 
     String description;
 
+    String imageUrl;
+
     @CreationTimestamp
     Timestamp createdAt;
 

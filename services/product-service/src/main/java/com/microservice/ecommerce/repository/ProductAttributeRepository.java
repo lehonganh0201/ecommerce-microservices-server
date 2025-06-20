@@ -4,6 +4,7 @@ import com.microservice.ecommerce.model.entity.ProductAttribute;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -17,4 +18,6 @@ import java.util.UUID;
 
 @Repository
 public interface ProductAttributeRepository extends JpaRepository<ProductAttribute, UUID> {
+    List<ProductAttribute> findByProductVariantId(UUID variantId);
+    List<ProductAttribute> findByTypeAndValue(String type, String value);
 }

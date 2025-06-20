@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -45,7 +46,7 @@ import java.util.UUID;
 public class ProductVariantController {
     ProductVariantService variantService;
 
-    @PostMapping()
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Tạo mới biến thể sản phẩm", description = "Tạo biến thể mới dựa trên thông tin đầu vào")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tạo thành công biến thể sản phẩm",
@@ -55,12 +56,12 @@ public class ProductVariantController {
     })
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<ProductResponse>> createProductVariantToProduct(
-            @RequestBody @Valid ProductVariantRequest variantRequest
+            @ModelAttribute @Valid ProductVariantRequest variantRequest
     ) {
         return ResponseEntity.ok(variantService.createVariantToProduct(variantRequest));
     }
 
-    @PutMapping(Endpoint.ProductVariant.VARIANT_ID)
+    @PutMapping(value = Endpoint.ProductVariant.VARIANT_ID, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Cập nhật biến thể sản phẩm", description = "Cập nhật thông tin biến thể sản phẩm theo ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
@@ -71,7 +72,7 @@ public class ProductVariantController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<ProductResponse>> updateProductVariant(
             @PathVariable(name = "variantId") UUID variantId,
-            @RequestBody ProductVariantRequest variantRequest
+            @ModelAttribute ProductVariantRequest variantRequest
     ) {
         return ResponseEntity.ok(variantService.updateVariantProduct(variantId, variantRequest));
     }

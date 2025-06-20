@@ -15,9 +15,11 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -43,10 +45,10 @@ public class CategoryController {
                     content = @Content(schema = @Schema(implementation = GlobalResponse.class))),
             @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ", content = @Content)
     })
-    @PostMapping()
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<CategoryResponse>> createCategory(
-            @RequestBody @Valid CategoryRequest request
+            @ModelAttribute @Valid CategoryRequest request
     ) {
         return ResponseEntity.ok(categoryService.createCategory(request));
     }
@@ -71,11 +73,11 @@ public class CategoryController {
                     content = @Content(schema = @Schema(implementation = GlobalResponse.class))),
             @ApiResponse(responseCode = "404", description = "Không tìm thấy danh mục", content = @Content)
     })
-    @PutMapping(Endpoint.Category.CATEGORY_ID)
+    @PutMapping(value = Endpoint.Category.CATEGORY_ID, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<CategoryResponse>> updateCategory(
             @PathVariable(name = "categoryId") UUID categoryId,
-            @RequestBody @Valid CategoryRequest request
+            @ModelAttribute @Valid CategoryRequest request
     ) {
         return ResponseEntity.ok(categoryService.updateCategory(categoryId, request));
     }
@@ -92,5 +94,21 @@ public class CategoryController {
             @PathVariable(name = "categoryId") UUID categoryId
     ) {
         return ResponseEntity.ok(categoryService.deleteCategory(categoryId));
+    }
+
+    @PutMapping(Endpoint.Category.UPLOAD)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<GlobalResponse<CategoryResponse>> uploadImage(
+            @PathVariable(name = "categoryId") UUID categoryId,
+            @RequestParam(name = "image") MultipartFile image
+    ) {
+        return ResponseEntity.ok(categoryService.uploadImage(categoryId, image));
+    }
+
+    @GetMapping(Endpoint.Category.CATEGORY_ID)
+    public ResponseEntity<GlobalResponse<CategoryResponse>> findCategoryById(
+            @PathVariable(name = "categoryId") UUID categoryId
+    ) {
+        return ResponseEntity.ok(categoryService.findCategoryById(categoryId));
     }
 }

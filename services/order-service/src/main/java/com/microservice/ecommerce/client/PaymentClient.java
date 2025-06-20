@@ -9,8 +9,12 @@ import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Map;
 
 /**
  * ----------------------------------------------------------------------------
@@ -33,4 +37,7 @@ public interface PaymentClient {
 
     @PostMapping(Endpoint.Payment.PREFIX)
     ResponseEntity<GlobalResponse<PaymentResponse>> createCODPayment(@RequestBody @Valid PaymentRequest request);
+
+    @GetMapping(Endpoint.Payment.CALLBACK)
+    ResponseEntity<GlobalResponse<String>> paymentConfirmation(@RequestParam Map<String, String> requestParams);
 }

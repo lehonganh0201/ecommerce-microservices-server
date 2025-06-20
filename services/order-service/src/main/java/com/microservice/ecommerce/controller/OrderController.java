@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -68,11 +69,13 @@ public class OrderController {
             @ApiResponse(responseCode = "401", description = "Người dùng chưa xác thực", content = @Content)
     })
     @GetMapping()
-    public ResponseEntity<GlobalResponse<List<OrderResponse>>> getOwnOrders(
+    public ResponseEntity<GlobalResponse<PageResponse<OrderResponse>>> getOwnOrders(
+            @RequestParam(name = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(name = "size", required = false, defaultValue = "10") int size,
             @RequestParam(name = "orderType", required = false) String type,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        return ResponseEntity.ok(orderService.findOwnOrders(type, jwt));
+        return ResponseEntity.ok(orderService.findOwnOrders(page, size, type, jwt));
     }
 
     @Operation(summary = "Lấy chi tiết đơn hàng theo ID", description = "Lấy chi tiết đơn hàng dựa trên orderId.")
@@ -98,8 +101,8 @@ public class OrderController {
             @ApiResponse(responseCode = "400", description = "Trạng thái không hợp lệ", content = @Content),
             @ApiResponse(responseCode = "401", description = "Người dùng chưa xác thực", content = @Content)
     })
-    @Hidden
     @PutMapping(Endpoint.Order.ORDER_ID)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GlobalResponse<OrderResponse>> changeOrderStatus(
             @PathVariable(name = "orderId") UUID orderId,
             @RequestParam(name = "status") String orderStatus
@@ -136,5 +139,12 @@ public class OrderController {
                 customerId, paymentMethod, minTotal, maxTotal,
                 productId, deliveryMethod, startDate, endDate
         ));
+    }
+
+    @GetMapping(Endpoint.Order.CONFIRM)
+    public ResponseEntity<GlobalResponse<String>> confirmationOrder(
+            @RequestParam Map<String, String> requestParams
+    ) {
+        return ResponseEntity.ok(orderService.confirmationOrder(requestParams));
     }
 }

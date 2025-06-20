@@ -18,6 +18,7 @@ public interface Endpoint {
         String ORDER_ID = "/{orderId}";
         String REFERENCE = "/reference";
         String FIND_ALL = "/all";
+        String CONFIRM = "/confirm";
     }
 
     public interface Variant {
@@ -27,11 +28,12 @@ public interface Endpoint {
     }
 
     public interface Payment {
-        String PREFIX = Endpoint.PREFIX + "/payments";
+        String PREFIX = "";
         String MOMO = "/momo";
         String VN_PAY = "/vn-pay";
         String VN_PAY_CALLBACK = "/callback";
         String MOMO_NOTIFY = "/notify";
         String MOMO_CALLBACK = "/return";
+        String CALLBACK = "/callback";
     }
 }

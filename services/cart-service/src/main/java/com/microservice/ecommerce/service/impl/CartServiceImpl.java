@@ -1,4 +1,4 @@
-package com.microservice.ecommerce.service.impk;
+package com.microservice.ecommerce.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microservice.ecommerce.client.ProductClient;
@@ -18,7 +18,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -58,8 +57,6 @@ public class CartServiceImpl implements CartService {
             cart.setItems(new ArrayList<>());
         }
 
-
-
         if (cartRequest.quantity() <= 0) {
             throw new BussinessException("Số lượng sản phẩm phải lớn hơn 0");
         }
@@ -89,14 +86,13 @@ public class CartServiceImpl implements CartService {
         }
 
         cart.setLastUpdated(LocalDateTime.now());
-        redisTemplate.opsForValue().set(cartKey, cart, Duration.ofHours(1));
+        redisTemplate.opsForValue().set(cartKey, cart);
 
         return new GlobalResponse<>(
                 Status.SUCCESS,
                 buildCartResponse(cart)
         );
     }
-
 
     @Override
     public GlobalResponse<CartResponse> getCart(UUID userId) {
@@ -137,7 +133,7 @@ public class CartServiceImpl implements CartService {
         }
 
         cart.setLastUpdated(LocalDateTime.now());
-        redisTemplate.opsForValue().set(cartKey, cart, Duration.ofHours(1));
+        redisTemplate.opsForValue().set(cartKey, cart);
 
         return new GlobalResponse<>(Status.SUCCESS, buildCartResponse(cart));
     }
@@ -179,7 +175,7 @@ public class CartServiceImpl implements CartService {
 
         existingItem.setQuantity(quantity);
         cart.setLastUpdated(LocalDateTime.now());
-        redisTemplate.opsForValue().set(cartKey, cart, Duration.ofHours(1));
+        redisTemplate.opsForValue().set(cartKey, cart);
 
         return new GlobalResponse<>(Status.SUCCESS, buildCartResponse(cart));
     }

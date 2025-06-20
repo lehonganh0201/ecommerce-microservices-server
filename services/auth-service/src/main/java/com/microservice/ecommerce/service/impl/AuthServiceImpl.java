@@ -1,7 +1,14 @@
 package com.microservice.ecommerce.service.impl;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.microservice.ecommerce.client.UserRequest;
+import com.microservice.ecommerce.client.UserResponse;
+import com.microservice.ecommerce.client.UserServiceClient;
 import com.microservice.ecommerce.config.KeycloakProperties;
 import com.microservice.ecommerce.exception.AuthenticationException;
+import com.microservice.ecommerce.exception.KeycloakException;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.Status;
 import com.microservice.ecommerce.model.request.AuthRequest;
@@ -9,7 +16,9 @@ import com.microservice.ecommerce.model.request.LoginRequest;
 import com.microservice.ecommerce.model.response.TokenResponse;
 import com.microservice.ecommerce.service.AuthService;
 import com.microservice.ecommerce.util.EmailUtil;
+import feign.FeignException;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -25,14 +34,18 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.RSAPublicKeySpec;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -56,6 +69,8 @@ public class AuthServiceImpl implements AuthService {
 
     EmailUtil emailUtil;
 
+    UserServiceClient userServiceClient;
+
     @NonFinal
     @Value("${application.url.callback}")
     String callbackUrl;
@@ -66,8 +81,8 @@ public class AuthServiceImpl implements AuthService {
 
     final String BEARER_PREFIX = "Bearer ";
 
-
     @Override
+    @Transactional
     public GlobalResponse<String> register(AuthRequest request) {
         final String url = keycloakProperties.serverUrl() + "/admin/realms/" + keycloakProperties.realm() + "/users";
 
@@ -89,36 +104,109 @@ public class AuthServiceImpl implements AuthService {
         )));
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(user, headers);
-        ResponseEntity<String> response = restTemplate.exchange(url, POST, entity, String.class);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
-        if (response.getStatusCode().isError()) {
+            if (response.getStatusCode().isError()) {
+                // Phân tích phản hồi lỗi từ Keycloak
+                String errorBody = response.getBody();
+                if (response.getStatusCode() == HttpStatus.CONFLICT && errorBody != null && errorBody.contains("User exists with same email")) {
+                    throw new KeycloakException("Email đã tồn tại: " + request.email());
+                }
+                throw new KeycloakException("Không thể đăng ký người dùng, mã lỗi: " + response.getStatusCode());
+            }
+
+            // Lấy userId từ Keycloak
+            String userId = getUserId(request.username());
+
+            // Gán vai trò cho người dùng
+            String roleId;
+            try {
+                roleId = getRoleId("USER");
+                assignRoleToUser(userId, roleId);
+            } catch (JSONException e) {
+                log.error("Lỗi khi gán vai trò: {}", e.getMessage());
+                throw new KeycloakException("Không thể gán vai trò cho người dùng");
+            }
+
+            // Gửi email xác thực
+            emailUtil.sendVerificationEmail(userId);
+
+            // Tạo UserRequest
+            UserRequest userRequest = new UserRequest(
+                    null,
+                    null,
+                    null,
+                    null
+            );
+
+            String userToken = getUserToken(request.username(), request.password());
+
+            // Gọi UserService
+            try {
+                GlobalResponse<UserResponse> createdUser = userServiceClient.createUser(userRequest, "Bearer " + userToken).getBody();
+                if (createdUser == null || createdUser.status() != Status.SUCCESS) {
+                    // Rollback Keycloak user
+                    restTemplate.exchange(
+                            keycloakProperties.serverUrl() + "/admin/realms/" + keycloakProperties.realm() + "/users/" + userId,
+                            HttpMethod.DELETE,
+                            new HttpEntity<>(headers),
+                            String.class
+                    );
+                    throw new KeycloakException("Không thể tạo thông tin người dùng trong UserService");
+                }
+            } catch (FeignException e) {
+                // Rollback Keycloak user
+                restTemplate.exchange(
+                        keycloakProperties.serverUrl() + "/admin/realms/" + keycloakProperties.realm() + "/users/" + userId,
+                        HttpMethod.DELETE,
+                        new HttpEntity<>(headers),
+                        String.class
+                );
+                if (e.status() == 401) {
+                    throw new KeycloakException("Không được phép truy cập UserService: 401 Unauthorized");
+                }
+                throw new KeycloakException("Lỗi khi tạo thông tin người dùng: " + e.getMessage());
+            }
+
+            return new GlobalResponse<>(
+                    Status.SUCCESS,
+                    "Đăng ký người dùng thành công!"
+            );
+        } catch (KeycloakException e) {
+            log.error("Lỗi Keycloak: {}", e.getErrorMessage());
             return new GlobalResponse<>(
                     Status.ERROR,
-                    "Cannot register, please try again"
+                    e.getErrorMessage()
+            );
+        } catch (Exception e) {
+            log.error("Lỗi không xác định khi đăng ký: {}", e.getMessage());
+            return new GlobalResponse<>(
+                    Status.ERROR,
+                    "Không thể đăng ký, vui lòng thử lại: " + e.getMessage()
             );
         }
+    }
 
-        String userId = getUserId(request.username());
+    private String getUserToken(String username, String password) {
+        String tokenUrl = keycloakProperties.serverUrl() + "/realms/" + keycloakProperties.realm() + "/protocol/openid-connect/token";
+        HttpHeaders tokenHeaders = new HttpHeaders();
+        tokenHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        String roleId = null;
-        try {
-            roleId = getRoleId("USER");
-        } catch (JSONException e) {
-            e.printStackTrace();
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "password");
+        body.add("client_id", keycloakProperties.clientId());
+        body.add("client_secret", keycloakProperties.clientSecret());
+        body.add("username", username);
+        body.add("password", password);
+
+        HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(body, tokenHeaders);
+        ResponseEntity<Map> tokenResponse = restTemplate.exchange(tokenUrl, HttpMethod.POST, tokenRequest, Map.class);
+
+        if (tokenResponse.getStatusCode().is2xxSuccessful() && tokenResponse.getBody() != null) {
+            return (String) tokenResponse.getBody().get("access_token");
         }
-
-        try {
-            assignRoleToUser(userId, roleId);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        emailUtil.sendVerificationEmail(userId);
-
-        return new GlobalResponse<>(
-                Status.SUCCESS,
-                "Create user successfully!"
-        );
+        throw new KeycloakException("Không thể lấy token cho người dùng: " + username);
     }
 
     private void assignRoleToUser(String userId, String roleId) throws JSONException {
@@ -173,18 +261,62 @@ public class AuthServiceImpl implements AuthService {
         if (response.getStatusCode().is2xxSuccessful()) {
             Map<String, Object> body = response.getBody();
 
+            String accessToken = (String) body.get("access_token");
+            DecodedJWT decodedJWT = JWT.decode(accessToken);
+
+            Map<String, Claim> claims = decodedJWT.getClaims();
+
+            List<String> realmRoles = (List<String>) claims.get("realm_access")
+                    .asMap()
+                    .get("roles");
+
             return new GlobalResponse<>(
                     Status.SUCCESS,
                     new TokenResponse(
                             (String) body.get("access_token"),
                             (String) body.get("refresh_token"),
                             ((Number) body.get("expires_in")).longValue(),
-                            null
+                            null,
+                            realmRoles
                     )
             );
         }else {
             throw new AuthenticationException("Please try again, login fails");
         }
+    }
+
+    private PublicKey getPublicKeyFromJWKS(Map<String, Object> jwks, String kid) {
+        List<Map<String, Object>> keys = (List<Map<String, Object>>) jwks.get("keys");
+        if (keys == null || keys.isEmpty()) {
+            throw new RuntimeException("JWKS không chứa khóa nào!");
+        }
+
+        for (Map<String, Object> key : keys) {
+            if (kid.equals(key.get("kid"))) {
+                try {
+                    String n = (String) key.get("n"); // Modulus
+                    String e = (String) key.get("e"); // Exponent
+                    if (n == null || e == null) {
+                        throw new RuntimeException("Thiếu modulus (n) hoặc exponent (e) trong JWKS key!");
+                    }
+                    // Log để kiểm tra giá trị n và e
+                    System.out.println("Modulus (n): " + n);
+                    System.out.println("Exponent (e): " + e);
+
+                    // Chuyển đổi n và e thành PublicKey
+                    byte[] modulusBytes = Base64.getUrlDecoder().decode(n);
+                    byte[] exponentBytes = Base64.getUrlDecoder().decode(e);
+                    RSAPublicKeySpec spec = new RSAPublicKeySpec(
+                            new BigInteger(1, modulusBytes),
+                            new BigInteger(1, exponentBytes)
+                    );
+                    return KeyFactory.getInstance("RSA").generatePublic(spec);
+                } catch (Exception ex) {
+                    throw new RuntimeException("Lỗi khi tạo public key từ JWKS: " + ex.getMessage(), ex);
+                }
+            }
+        }
+        throw new RuntimeException("Không tìm thấy public key cho kid: " + kid);
     }
 
     @Override
@@ -224,13 +356,23 @@ public class AuthServiceImpl implements AuthService {
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 Map<String, Object> body = response.getBody();
+                String accessToken = (String) body.get("access_token");
+                DecodedJWT decodedJWT = JWT.decode(accessToken);
+
+                Map<String, Claim> claims = decodedJWT.getClaims();
+
+                List<String> realmRoles = (List<String>) claims.get("realm_access")
+                        .asMap()
+                        .get("roles");
+
                 return new GlobalResponse<>(
                         Status.SUCCESS,
                         new TokenResponse(
                                 (String) body.get("access_token"),
                                 (String) body.get("refresh_token"),
                                 ((Number) body.get("expires_in")).longValue(),
-                                null
+                                null,
+                                realmRoles
                         )
                 );
             } else {
@@ -263,13 +405,23 @@ public class AuthServiceImpl implements AuthService {
         if (response.getStatusCode().is2xxSuccessful()) {
             Map<String, Object> body = response.getBody();
 
+            String accessToken = (String) body.get("access_token");
+            DecodedJWT decodedJWT = JWT.decode(accessToken);
+
+            Map<String, Claim> claims = decodedJWT.getClaims();
+
+            List<String> realmRoles = (List<String>) claims.get("realm_access")
+                    .asMap()
+                    .get("roles");
+
             return new GlobalResponse<>(
                     Status.SUCCESS,
                     new TokenResponse(
                             (String) body.get("access_token"),
                             (String) body.get("refresh_token"),
                             ((Number) body.get("expires_in")).longValue(),
-                            fontEndUrl
+                            null,
+                            realmRoles
                     )
             );
         } else {

@@ -34,7 +34,6 @@ public record ProductVariantRequest(
         @Min(value = 0, message = "Số lượng tồn kho phải lớn hơn hoặc bằng 0")
         Integer stock,
 
-        @Schema(description = "Danh sách thuộc tính của biến thể")
-        List<ProductAttributeRequest> attributes
+        MultipartFile image
 ) {
 }

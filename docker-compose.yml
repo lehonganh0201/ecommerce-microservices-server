@@ -133,6 +133,8 @@ services:
     restart: always
     ports:
       - 6379:6379
+    volumes:
+      - redis_data:/data  # Gắn volume để lưu dữ liệu Redis
     networks:
       - ecommerce-microservices-net
 
@@ -177,3 +179,4 @@ volumes:
   pgadmin:   # Persistent storage for pgAdmin
   mongo:     # Persistent storage for MongoDB
   elastic_data:  # Persistent storage for Elasticsearch
+  redis_data:

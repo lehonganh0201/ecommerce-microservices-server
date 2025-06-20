@@ -4,6 +4,7 @@ import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.PageResponse;
 import com.microservice.ecommerce.model.request.CategoryRequest;
 import com.microservice.ecommerce.model.response.CategoryResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -25,4 +26,8 @@ public interface CategoryService {
     GlobalResponse<CategoryResponse> updateCategory(UUID categoryId, CategoryRequest request);
 
     GlobalResponse<String> deleteCategory(UUID categoryId);
+
+    GlobalResponse<CategoryResponse> uploadImage(UUID categoryId, MultipartFile image);
+
+    GlobalResponse<CategoryResponse> findCategoryById(UUID categoryId);
 }

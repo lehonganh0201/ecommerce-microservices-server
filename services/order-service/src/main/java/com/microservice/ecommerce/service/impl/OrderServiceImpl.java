@@ -108,7 +108,6 @@ public class OrderServiceImpl implements OrderService {
                     .order(order)
                     .price(priceMap.get(item.variantId()))
                     .quantity(item.quantity())
-                    .productId(item.productId())
                     .variantId(item.variantId())
                     .build();
             orderItems.add(orderItem);
@@ -161,6 +160,7 @@ public class OrderServiceImpl implements OrderService {
         return new GlobalResponse<>(
                 Status.SUCCESS,
                 new OrderResponse(
+                        order.getId(),
                         order.getReference(),
                         order.getStatus(),
                         order.getPaymentMethod(),
@@ -179,14 +179,27 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public GlobalResponse<List<OrderResponse>> findOwnOrders(String type, Jwt jwt) {
+    public GlobalResponse<PageResponse<OrderResponse>> findOwnOrders(int page, int size, String type, Jwt jwt) {
         String userId = jwt.getSubject();
 
-        List<Order> orders = orderRepository.findAllByUserIdAndStatus(userId, type);
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Order> orders = orderRepository.findAllByUserIdAndStatus(userId, type, pageable);
 
         return new GlobalResponse<>(
                 Status.SUCCESS,
-                getOrderResponse(orders)
+                new PageResponse<>(
+                        getOrderResponse(orders.stream().toList()),
+                        orders.getTotalPages(),
+                        orders.getTotalElements(),
+                        orders.getNumber(),
+                        orders.getSize(),
+                        orders.getNumberOfElements(),
+                        orders.isFirst(),
+                        orders.isLast(),
+                        orders.hasNext(),
+                        orders.hasPrevious()
+                )
         );
     }
 
@@ -296,9 +309,15 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
+    @Override
+    public GlobalResponse<String> confirmationOrder(Map<String, String> requestParams) {
+        return paymentClient.paymentConfirmation(requestParams).getBody();
+    }
+
     private List<OrderResponse> getOrderResponse(List<Order> orders) {
         return orders.stream()
                 .map(order -> new OrderResponse(
+                        order.getId(),
                         order.getReference(),
                         order.getStatus(),
                         order.getPaymentMethod(),

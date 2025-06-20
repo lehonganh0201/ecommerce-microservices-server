@@ -8,7 +8,6 @@ import com.microservice.ecommerce.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -19,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping(Endpoint.User.PREFIX)
@@ -36,7 +36,7 @@ public class UserController {
     })
     @PostMapping
     public ResponseEntity<GlobalResponse<UserResponse>> createUser(
-            @RequestBody(description = "Thông tin người dùng cần tạo") @Valid UserRequest request,
+            @RequestBody UserRequest request,
             @AuthenticationPrincipal Jwt jwt
     ) {
         return ResponseEntity.ok(userService.createUser(request, jwt));
@@ -66,9 +66,17 @@ public class UserController {
     @PutMapping
     public ResponseEntity<GlobalResponse<UserResponse>> updateCurrentUser(
             @RequestParam(name = "addressId", required = false) Integer addressId,
-            @RequestBody(description = "Thông tin người dùng cần cập nhật") @Valid UserRequest request,
+            @RequestBody @Valid UserRequest request,
             @AuthenticationPrincipal Jwt jwt
     ) {
         return ResponseEntity.ok(userService.updateUser(addressId, request, jwt));
+    }
+
+    @PutMapping(Endpoint.User.UPLOAD)
+    public ResponseEntity<?> uploadAvatar(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(name = "avatar")MultipartFile avatar
+            ) {
+        return ResponseEntity.ok(userService.uploadAvatar(jwt, avatar));
     }
 }

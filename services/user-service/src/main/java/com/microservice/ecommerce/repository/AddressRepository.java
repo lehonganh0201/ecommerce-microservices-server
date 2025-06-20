@@ -1,6 +1,7 @@
 package com.microservice.ecommerce.repository;
 
 import com.microservice.ecommerce.model.entity.Address;
+import com.microservice.ecommerce.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -24,4 +25,6 @@ public interface AddressRepository extends JpaRepository<Address, Integer> {
 
     @Query("SELECT a FROM Address  a WHERE a.user.id = :Id")
     List<Address> findAllByUserId(String id);
+
+    List<Address> findByUser(User user);
 }

@@ -5,6 +5,7 @@ import com.microservice.ecommerce.constant.PaymentMethod;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * ----------------------------------------------------------------------------
@@ -17,6 +18,7 @@ import java.util.List;
 
 
 public record OrderResponse(
+        UUID id,
         String reference,
         OrderStatus status,
         PaymentMethod paymentMethod,

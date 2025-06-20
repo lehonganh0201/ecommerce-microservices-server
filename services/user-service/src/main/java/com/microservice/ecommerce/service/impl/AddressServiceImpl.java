@@ -6,16 +6,21 @@ import com.microservice.ecommerce.model.entity.User;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.Status;
 import com.microservice.ecommerce.model.request.AddressRequest;
+import com.microservice.ecommerce.model.response.AddressResponse;
 import com.microservice.ecommerce.repository.AddressRepository;
 import com.microservice.ecommerce.repository.UserRepository;
 import com.microservice.ecommerce.service.AddressService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * ----------------------------------------------------------------------------
@@ -33,92 +38,139 @@ import org.springframework.stereotype.Service;
 public class AddressServiceImpl implements AddressService {
     AddressRepository addressRepository;
     UserRepository userRepository;
-
     AddressMapper addressMapper;
 
     @Override
+    @Transactional
     public GlobalResponse<?> addAddress(AddressRequest request, Jwt jwt) {
         try {
-            String username = jwt.getSubject();
-            User user = userRepository.findById(username)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
+            String userId = jwt.getSubject();
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với ID: " + userId));
 
             Address address = addressMapper.toAddress(request);
             address.setUser(user);
-            addressRepository.save(address);
 
-            return new GlobalResponse<>(Status.SUCCESS, "Address added successfully");
+            if (request.isDefault()) {
+                addressRepository.findByUser(user).forEach(existingAddress -> {
+                    existingAddress.setIsDefault(false);
+                    addressRepository.save(existingAddress);
+                });
+            }
+
+            address = addressRepository.save(address);
+            log.info("Đã thêm địa chỉ mới cho user {}: {}", userId, address.getId());
+
+            return new GlobalResponse<>(
+                    Status.SUCCESS,
+                    addressMapper.toAddressResponse(address)
+            );
+        } catch (EntityNotFoundException ex) {
+            log.error("Lỗi khi thêm địa chỉ: {}", ex.getMessage(), ex);
+            return new GlobalResponse<>(Status.ERROR, ex.getMessage());
         } catch (Exception ex) {
-            log.error("Error while adding address: {}", ex.getMessage(), ex);
-            return new GlobalResponse<>(Status.ERROR, "Failed to add address");
+            log.error("Lỗi không xác định khi thêm địa chỉ: {}", ex.getMessage(), ex);
+            return new GlobalResponse<>(Status.ERROR, "Không thể thêm địa chỉ");
         }
     }
 
     @Override
+    @Transactional
     public GlobalResponse<?> updateAddress(Integer addressId, AddressRequest request, Jwt jwt) {
         try {
-            String username = jwt.getSubject();
-            User user = userRepository.findById(username)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
+            String userId = jwt.getSubject();
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với ID: " + userId));
 
             Address existingAddress = addressRepository.findById(addressId)
-                    .orElseThrow(() -> new EntityNotFoundException("Address not found with id: " + addressId));
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy địa chỉ với ID: " + addressId));
 
-            if (!existingAddress.getUser().getId().equals(user.getId())) {
-                return new GlobalResponse<>(Status.ERROR, "You do not have permission to update this address");
+            if (!existingAddress.getUser().getId().equals(userId)) {
+                throw new AuthorizationDeniedException("Bạn không có quyền cập nhật địa chỉ này");
             }
 
             addressMapper.updateAddress(request, existingAddress);
-            addressRepository.save(existingAddress);
 
-            return new GlobalResponse<>(Status.SUCCESS, "Address updated successfully");
-        } catch (EntityNotFoundException ex) {
+            if (request.isDefault()) {
+                addressRepository.findByUser(user).stream()
+                        .filter(a -> !a.getId().equals(addressId))
+                        .forEach(a -> {
+                            a.setIsDefault(false);
+                            addressRepository.save(a);
+                        });
+            }
+
+            existingAddress = addressRepository.save(existingAddress);
+            log.info("Đã cập nhật địa chỉ {} cho user {}", addressId, userId);
+
+            return new GlobalResponse<>(
+                    Status.SUCCESS,
+                    addressMapper.toAddressResponse(existingAddress)
+            );
+        } catch (EntityNotFoundException | AuthorizationDeniedException ex) {
+            log.error("Lỗi khi cập nhật địa chỉ: {}", ex.getMessage(), ex);
             return new GlobalResponse<>(Status.ERROR, ex.getMessage());
         } catch (Exception ex) {
-            log.error("Error while updating address: {}", ex.getMessage(), ex);
-            return new GlobalResponse<>(Status.ERROR, "Failed to update address");
+            log.error("Lỗi không xác định khi cập nhật địa chỉ: {}", ex.getMessage(), ex);
+            return new GlobalResponse<>(Status.ERROR, "Không thể cập nhật địa chỉ");
         }
     }
 
     @Override
+    @Transactional
     public GlobalResponse<?> getOwnAddress(Jwt jwt) {
         try {
-            String username = jwt.getSubject();
-            User user = userRepository.findById(username)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
+            String userId = jwt.getSubject();
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với ID: " + userId));
 
-            var addressList = addressRepository.findAllByUserId(user.getId());
-            var addressDtoList = addressMapper.toDtoList(addressList);
+            List<Address> addresses = addressRepository.findByUser(user);
+            List<AddressResponse> addressResponses = addresses.stream()
+                    .map(addressMapper::toAddressResponse)
+                    .toList();
 
-            return new GlobalResponse<>(Status.SUCCESS, addressDtoList);
+            log.info("Đã lấy danh sách địa chỉ cho user {}", userId);
+
+            return new GlobalResponse<>(
+                    Status.SUCCESS,
+                    addressResponses
+            );
         } catch (EntityNotFoundException ex) {
+            log.error("Lỗi khi lấy danh sách địa chỉ: {}", ex.getMessage(), ex);
             return new GlobalResponse<>(Status.ERROR, ex.getMessage());
         } catch (Exception ex) {
-            log.error("Error while fetching addresses: {}", ex.getMessage(), ex);
-            return new GlobalResponse<>(Status.ERROR, "Failed to get addresses");
+            log.error("Lỗi không xác định khi lấy danh sách địa chỉ: {}", ex.getMessage(), ex);
+            return new GlobalResponse<>(Status.ERROR, "Không thể lấy danh sách địa chỉ");
         }
     }
 
     @Override
+    @Transactional
     public GlobalResponse<?> getAddressById(Integer addressId, Jwt jwt) {
-        String username = jwt.getSubject();
+        try {
+            String userId = jwt.getSubject();
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với ID: " + userId));
 
-        User user = userRepository.findById(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+            Address address = addressRepository.findById(addressId)
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy địa chỉ với ID: " + addressId));
 
-        Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new EntityNotFoundException("Address not found"));
+            if (!address.getUser().getId().equals(userId)) {
+                throw new AuthorizationDeniedException("Bạn không có quyền truy cập địa chỉ này");
+            }
 
-        if (!address.getUser().getId().equals(user.getId())) {
+            log.info("Đã lấy địa chỉ {} cho user {}", addressId, userId);
+
             return new GlobalResponse<>(
-                    Status.ERROR,
-                    "Access denied: Address does not belong to the current user"
+                    Status.SUCCESS,
+                    addressMapper.toAddressResponse(address)
             );
+        } catch (EntityNotFoundException | AuthorizationDeniedException ex) {
+            log.error("Lỗi khi lấy địa chỉ: {}", ex.getMessage(), ex);
+            return new GlobalResponse<>(Status.ERROR, ex.getMessage());
+        } catch (Exception ex) {
+            log.error("Lỗi không xác định khi lấy địa chỉ: {}", ex.getMessage(), ex);
+            return new GlobalResponse<>(Status.ERROR, "Không thể lấy địa chỉ");
         }
-
-        return new GlobalResponse<>(
-                Status.SUCCESS,
-                addressMapper.toAddressResponse(address)
-        );
     }
 }

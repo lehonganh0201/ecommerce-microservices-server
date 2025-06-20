@@ -16,9 +16,6 @@ import java.util.UUID;
 
 
 public record OrderItemRequest(
-        @NotNull(message = "Product ID cannot be null")
-        UUID productId,
-
         @NotNull(message = "Product Variant ID cannot be null")
         UUID variantId,
 

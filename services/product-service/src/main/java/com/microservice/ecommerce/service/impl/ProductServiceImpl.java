@@ -13,6 +13,7 @@ import com.microservice.ecommerce.model.mapper.ProductImageMapper;
 import com.microservice.ecommerce.model.mapper.ProductMapper;
 import com.microservice.ecommerce.model.mapper.ProductVariantMapper;
 import com.microservice.ecommerce.model.request.ProductRequest;
+import com.microservice.ecommerce.model.request.UpdateProductRequest;
 import com.microservice.ecommerce.model.response.ProductAttributeResponse;
 import com.microservice.ecommerce.model.response.ProductImageResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
@@ -21,6 +22,7 @@ import com.microservice.ecommerce.repository.CategoryRepository;
 import com.microservice.ecommerce.repository.ProductDocumentRepository;
 import com.microservice.ecommerce.repository.ProductRepository;
 import com.microservice.ecommerce.service.ProductService;
+import com.microservice.ecommerce.util.CloudinaryUtil;
 import com.microservice.ecommerce.util.FileUtil;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
@@ -45,10 +47,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -76,11 +79,9 @@ public class ProductServiceImpl implements ProductService {
     UserServiceClient userServiceClient;
 
     FileUtil fileUtil;
+    CloudinaryUtil cloudinaryUtil;
 
     ElasticsearchOperations elasticsearchOperations;
-
-    private static final String BASE_DIRECTORY = "resource/images/product-images/";
-    private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
 
     @Override
     public GlobalResponse<ProductResponse> createProduct(ProductRequest request) {
@@ -108,23 +109,36 @@ public class ProductServiceImpl implements ProductService {
         product.setIsActive(true);
         product.setCreatorName(creatorName);
 
-        List<ProductImage> images = new ArrayList<>();
+        List<ProductImage> images = Collections.synchronizedList(new ArrayList<>());
+        ExecutorService executorService = Executors.newFixedThreadPool(Math.min(request.images().size(), 4)); // Giới hạn tối đa 4 thread
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         for (var image : request.images()) {
             if (!image.isEmpty()) {
-                String filePath = fileUtil.saveFile(image, BASE_DIRECTORY);
-
-                if (filePath == null) {
-                    throw new BusinessException("Cannot upload file, please try again");
-                }
-
-                ProductImage productImage = ProductImage.builder()
-                        .imageUrl(filePath)
-                        .product(product)
-                        .build();
-
-                images.add(productImage);
+                Product finalProduct = product;
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    try {
+                        String imageUrl = cloudinaryUtil.upload(image);
+                        ProductImage productImage = ProductImage.builder()
+                                .imageUrl(imageUrl)
+                                .product(finalProduct)
+                                .build();
+                        images.add(productImage);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Cannot upload image to Cloudinary: " + e.getMessage(), e);
+                    }
+                }, executorService);
+                futures.add(future);
             }
+        }
+
+        try {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        } catch (Exception e) {
+            throw new BusinessException("Failed to upload one or more images: " + e.getMessage());
+        } finally {
+            executorService.shutdown();
         }
 
         product.setImages(images);
@@ -136,7 +150,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductImageResponse> imageResponses = product.getImages().stream()
                 .map(productImage -> ProductImageResponse.builder()
                         .id(productImage.getId())
-                        .imageUrl(ROOT_DIRECTORY + '\\' + productImage.getImageUrl())
+                        .imageUrl(productImage.getImageUrl())
                         .build())
                 .collect(Collectors.toList());
 
@@ -148,6 +162,9 @@ public class ProductServiceImpl implements ProductService {
                 .creatorName(product.getCreatorName())
                 .createdDate(product.getCreatedDate())
                 .images(imageResponses)
+                .isActive(product.getIsActive())
+                .categoryId(category.getId())
+                .categoryName(category.getName())
                 .build();
 
         return new GlobalResponse<>(Status.SUCCESS, response);
@@ -185,7 +202,7 @@ public class ProductServiceImpl implements ProductService {
                     List<ProductImageResponse> imageResponses = product.getImages().stream()
                             .map(productImage -> {
                                 ProductImageResponse imageResponse = imageMapper.toProductImageResponse(productImage);
-                                imageResponse.setImageUrl(ROOT_DIRECTORY + imageResponse.getImageUrl());
+//                                imageResponse.setImageUrl(ROOT_DIRECTORY + imageResponse.getImageUrl());
 
                                 return imageResponse;
                             })
@@ -218,13 +235,15 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Not found product with provided:: " + productId));
 
+        Category category = categoryRepository.findByProductId(productId);
+
         ProductResponse response = productMapper.toProductResponse(product);
         response.setImages(product.getImages().stream()
                 .map(productImage -> {
                     var imageResponse = imageMapper.toProductImageResponse(productImage);
 
                     if (imageResponse.getImageUrl() != null) {
-                        imageResponse.setImageUrl(ROOT_DIRECTORY + '\\' + imageResponse.getImageUrl());
+                        imageResponse.setImageUrl(imageResponse.getImageUrl());
                     }
 
                     return imageResponse;
@@ -236,7 +255,7 @@ public class ProductServiceImpl implements ProductService {
                     ProductVariantResponse variantResponse = variantMapper.toProductVariantResponse(variant);
 
                     if (variant.getImageUrl() != null) {
-                        variantResponse.setImageUrl(ROOT_DIRECTORY + '\\' + variant.getImageUrl());
+                        variantResponse.setImageUrl(variant.getImageUrl());
                     }
 
                     variantResponse.setAttributes(
@@ -255,6 +274,11 @@ public class ProductServiceImpl implements ProductService {
                     return variantResponse;
                 }).toList());
 
+        log.info("CATEGORY: {}", category);
+        response.setCategoryId(category.getId());
+        response.setCategoryName(category.getName());
+        response.setIsActive(product.getIsActive());
+
         return new GlobalResponse<>(
                 Status.SUCCESS,
                 response
@@ -263,54 +287,78 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public GlobalResponse<ProductResponse> updateProduct(UUID productId, ProductRequest request) {
+    public GlobalResponse<ProductResponse> updateProduct(UUID productId, UpdateProductRequest request) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with ID: " + productId));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!product.getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
-                throw new BusinessException("You cannot update product from another store.");
-            }
-        } else {
-            throw new BusinessException("You authentication is not available, please try again.");
-        }
-
-
         productMapper.updateProduct(request, product);
 
-        if (request.images() != null && !request.images().isEmpty()) {
+        if (request.images() != null || request.existingImageUrls() != null) {
+            List<ProductImage> currentImages = product.getImages();
+
+            List<String> currentImageUrls = currentImages.stream()
+                    .map(ProductImage::getImageUrl)
+                    .collect(Collectors.toList());
+
+            List<String> existingImageUrls = request.existingImageUrls() != null ? request.existingImageUrls() : new ArrayList<>();
+
+            List<ProductImage> imagesToDelete = currentImages.stream()
+                    .filter(image -> !existingImageUrls.contains(image.getImageUrl()))
+                    .collect(Collectors.toList());
+
             Iterator<ProductImage> iterator = product.getImages().iterator();
             while (iterator.hasNext()) {
                 ProductImage oldImage = iterator.next();
-                File file = new File(oldImage.getImageUrl());
-                if (file.exists()) {
-                    file.delete();
-                }
-                iterator.remove();
-            }
-
-            List<ProductImage> images = new ArrayList<>();
-
-            for (var image : request.images()) {
-                if (!image.isEmpty()) {
-                    String filePath = fileUtil.saveFile(image, BASE_DIRECTORY);
-
-                    if (filePath == null) {
-                        throw new BusinessException("Cannot upload file, please try again");
+                if (imagesToDelete.contains(oldImage)) {
+                    try {
+                        cloudinaryUtil.remove(oldImage.getImageUrl());
+                        iterator.remove();
+                    } catch (IOException e) {
+                        throw new BusinessException("Cannot delete old image from Cloudinary: " + e.getMessage());
                     }
-
-                    ProductImage productImage = ProductImage.builder()
-                            .imageUrl(filePath)
-                            .product(product)
-                            .build();
-
-                    images.add(productImage);
                 }
             }
 
-            product.setImages(images);
+            List<ProductImage> newImages = Collections.synchronizedList(new ArrayList<>());
+            if (request.images() != null && !request.images().isEmpty()) {
+                ExecutorService executorService = Executors.newFixedThreadPool(Math.min(request.images().size(), 4));
+                List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+                for (var image : request.images()) {
+                    if (!image.isEmpty()) {
+                        Product finalProduct = product;
+                        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                            try {
+                                String imageUrl = cloudinaryUtil.upload(image);
+                                ProductImage productImage = ProductImage.builder()
+                                        .imageUrl(imageUrl)
+                                        .product(finalProduct)
+                                        .build();
+                                newImages.add(productImage);
+                            } catch (IOException e) {
+                                throw new RuntimeException("Cannot upload image to Cloudinary: " + e.getMessage(), e);
+                            }
+                        }, executorService);
+                        futures.add(future);
+                    }
+                }
+
+                try {
+                    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+                } catch (Exception e) {
+                    throw new BusinessException("Failed to upload one or more images: " + e.getMessage());
+                } finally {
+                    executorService.shutdown();
+                }
+            }
+
+            product.getImages().addAll(newImages);
+        }
+
+        if (request.categoryId() != null) {
+            Category category = categoryRepository.findById(request.categoryId())
+                    .orElseThrow(() -> new EntityNotFoundException("Category not found with ID: " + request.categoryId()));
+            product.setCategory(category);
         }
 
         product = productRepository.save(product);
@@ -318,9 +366,11 @@ public class ProductServiceImpl implements ProductService {
         List<ProductImageResponse> imageResponses = product.getImages().stream()
                 .map(productImage -> ProductImageResponse.builder()
                         .id(productImage.getId())
-                        .imageUrl(ROOT_DIRECTORY + '\\' + productImage.getImageUrl())
+                        .imageUrl(productImage.getImageUrl())
                         .build())
                 .collect(Collectors.toList());
+
+        Category category = categoryRepository.findByProductId(productId);
 
         ProductResponse response = ProductResponse.builder()
                 .id(product.getId())
@@ -329,7 +379,10 @@ public class ProductServiceImpl implements ProductService {
                 .price(product.getPrice())
                 .creatorName(product.getCreatorName())
                 .createdDate(product.getCreatedDate())
+                .isActive(product.getIsActive())
                 .images(imageResponses)
+                .categoryId(category.getId())
+                .categoryName(category.getName())
                 .build();
 
         return new GlobalResponse<>(Status.SUCCESS, response);
@@ -341,33 +394,45 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with ID: " + productId));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        if (authentication.getPrincipal() instanceof Jwt jwt) {
+//            if (!product.getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
+//                throw new BusinessException("You cannot update product from another store.");
+//            }
+//        } else {
+//            throw new BusinessException("Your authentication is not available, please try again.");
+//        }
 
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!product.getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
-                throw new BusinessException("You cannot update product from another store.");
-            }
-        } else {
-            throw new BusinessException("You authentication is not available, please try again.");
-        }
-
-        List<ProductImage> newImages = new ArrayList<>();
+        List<ProductImage> newImages = Collections.synchronizedList(new ArrayList<>());
+        ExecutorService executorService = Executors.newFixedThreadPool(Math.min(images.size(), 4)); // Giới hạn tối đa 4 thread
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         for (var image : images) {
             if (!image.isEmpty()) {
-                String filePath = fileUtil.saveFile(image, BASE_DIRECTORY);
-
-                if (filePath == null) {
-                    throw new BusinessException("Cannot upload file, please try again");
-                }
-
-                ProductImage productImage = ProductImage.builder()
-                        .imageUrl(filePath)
-                        .product(product)
-                        .build();
-
-                newImages.add(productImage);
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    try {
+                        String imageUrl = cloudinaryUtil.upload(image);
+                        ProductImage productImage = ProductImage.builder()
+                                .imageUrl(imageUrl)
+                                .product(product)
+                                .build();
+                        newImages.add(productImage);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Cannot upload image to Cloudinary: " + e.getMessage(), e);
+                    }
+                }, executorService);
+                futures.add(future);
             }
+        }
+
+        // Chờ tất cả các tác vụ upload hoàn thành
+        try {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        } catch (Exception e) {
+            throw new BusinessException("Failed to upload one or more images: " + e.getMessage());
+        } finally {
+            executorService.shutdown();
         }
 
         product.getImages().addAll(newImages);
@@ -376,9 +441,11 @@ public class ProductServiceImpl implements ProductService {
         List<ProductImageResponse> imageResponses = product.getImages().stream()
                 .map(productImage -> ProductImageResponse.builder()
                         .id(productImage.getId())
-                        .imageUrl(ROOT_DIRECTORY + '\\' + productImage.getImageUrl())
+                        .imageUrl(productImage.getImageUrl()) // Cloudinary URL không cần ROOT_DIRECTORY
                         .build())
                 .collect(Collectors.toList());
+
+        Category category = categoryRepository.findByProductId(productId);
 
         ProductResponse response = ProductResponse.builder()
                 .id(product.getId())
@@ -388,6 +455,9 @@ public class ProductServiceImpl implements ProductService {
                 .creatorName(product.getCreatorName())
                 .createdDate(product.getCreatedDate())
                 .images(imageResponses)
+                .isActive(product.getIsActive())
+                .categoryId(category.getId())
+                .categoryName(category.getName())
                 .build();
 
         return new GlobalResponse<>(Status.SUCCESS, response);
@@ -414,11 +484,51 @@ public class ProductServiceImpl implements ProductService {
                         product.getStock(),
                         null,
                         null,
+                        product.getIsActive(),
+                        null,
+                        null,
                         null,
                         null))
                 .toList();
 
         return new GlobalResponse<>(Status.SUCCESS, productResponses);
+    }
+
+    @Override
+    public GlobalResponse<ProductResponse> changeStatusForProduct(UUID productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with ID: " + productId));
+
+        product.setIsActive(!product.getIsActive());
+
+        product = productRepository.save(product);
+
+        List<ProductImageResponse> imageResponses = product.getImages().stream()
+                .map(productImage -> ProductImageResponse.builder()
+                        .id(productImage.getId())
+                        .imageUrl(productImage.getImageUrl())
+                        .build())
+                .collect(Collectors.toList());
+
+        Category category = categoryRepository.findByProductId(productId);
+
+        ProductResponse response = ProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .creatorName(product.getCreatorName())
+                .createdDate(product.getCreatedDate())
+                .isActive(product.getIsActive())
+                .images(imageResponses)
+                .categoryId(category.getId())
+                .categoryName(category.getName())
+                .build();
+
+        return new GlobalResponse<>(
+                Status.SUCCESS,
+                response
+        );
     }
 
 

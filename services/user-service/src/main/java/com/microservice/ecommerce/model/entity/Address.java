@@ -26,12 +26,17 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer id;
 
+    String phoneNumber;
+
     String street;
     String city;
     String state;
     String country;
     String zipCode;
     String description;
+
+    @Column(nullable = false)
+    Boolean isDefault = false;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, updatable = false)

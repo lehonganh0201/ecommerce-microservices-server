@@ -3,6 +3,7 @@ package com.microservice.ecommerce.service;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.PageResponse;
 import com.microservice.ecommerce.model.request.ProductRequest;
+import com.microservice.ecommerce.model.request.UpdateProductRequest;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,9 +27,11 @@ public interface ProductService {
 
     GlobalResponse<ProductResponse> getProductById(UUID productId);
 
-    GlobalResponse<ProductResponse> updateProduct(UUID productId, ProductRequest request);
+    GlobalResponse<ProductResponse> updateProduct(UUID productId, UpdateProductRequest request);
 
     GlobalResponse<ProductResponse> uploadImage(UUID productId, List<MultipartFile> images);
 
     GlobalResponse<List<ProductResponse>> searchByKeyword(String keyword);
+
+    GlobalResponse<ProductResponse> changeStatusForProduct(UUID productId);
 }

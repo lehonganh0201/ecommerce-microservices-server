@@ -2,6 +2,7 @@ package com.microservice.ecommerce.model.mapper;
 
 import com.microservice.ecommerce.model.entity.Product;
 import com.microservice.ecommerce.model.request.ProductRequest;
+import com.microservice.ecommerce.model.request.UpdateProductRequest;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import org.mapstruct.*;
 
@@ -26,4 +27,7 @@ public interface ProductMapper {
 
     @Mapping(target = "images", ignore = true)
     void updateProduct(ProductRequest request, @MappingTarget Product product);
+
+    @Mapping(target = "images", ignore = true)
+    void updateProduct(UpdateProductRequest request, @MappingTarget Product product);
 }

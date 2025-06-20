@@ -2,7 +2,6 @@ package com.microservice.ecommerce.service.impl;
 
 import com.microservice.ecommerce.exception.BusinessException;
 import com.microservice.ecommerce.model.entity.Product;
-import com.microservice.ecommerce.model.entity.ProductAttribute;
 import com.microservice.ecommerce.model.entity.ProductVariant;
 import com.microservice.ecommerce.model.global.GlobalResponse;
 import com.microservice.ecommerce.model.global.Status;
@@ -16,11 +15,10 @@ import com.microservice.ecommerce.model.response.ProductAttributeResponse;
 import com.microservice.ecommerce.model.response.ProductPriceResponse;
 import com.microservice.ecommerce.model.response.ProductResponse;
 import com.microservice.ecommerce.model.response.ProductVariantResponse;
-import com.microservice.ecommerce.repository.ProductAttributeRepository;
 import com.microservice.ecommerce.repository.ProductRepository;
 import com.microservice.ecommerce.repository.ProductVariantRepository;
 import com.microservice.ecommerce.service.ProductVariantService;
-import com.microservice.ecommerce.util.FileUtil;
+import com.microservice.ecommerce.util.CloudinaryUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -33,7 +31,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,14 +53,12 @@ import java.util.stream.Collectors;
 public class ProductVariantServiceImpl implements ProductVariantService {
     ProductVariantRepository variantRepository;
     ProductRepository productRepository;
-    ProductAttributeRepository attributeRepository;
 
     ProductVariantMapper variantMapper;
     ProductMapper productMapper;
     ProductImageMapper imageMapper;
 
-    private static final String BASE_DIRECTORY = "resource/images/variant-images/";
-    private static final String ROOT_DIRECTORY = System.getProperty("user.dir");
+    CloudinaryUtil cloudinaryUtil;
 
     @Override
     @Transactional
@@ -70,48 +66,32 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         Product product = productRepository.findById(variantRequest.productId())
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy sản phẩm"));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!product.getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
-                throw new BusinessException("You cannot update product from another store.");
-            }
-        } else {
-            throw new BusinessException("You authentication is not available, please try again.");
-        }
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        if (authentication.getPrincipal() instanceof Jwt jwt) {
+//            if (!product.getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
+//                throw new BusinessException("You cannot update product from another store.");
+//            }
+//        } else {
+//            throw new BusinessException("Your authentication is not available, please try again.");
+//        }
 
         ProductVariant variant = variantMapper.toProductVariant(variantRequest);
         variant.setProduct(product);
 
-        variant = variantRepository.save(variant);
-//        if (!variantRequest.image().isEmpty()) {
-//            String filePath = fileUtil.saveFile(variantRequest.image(), BASE_DIRECTORY);
-//
-//            if (filePath == null) {
-//                throw new BusinessException("Không thể upload file, vui lòng thử lại");
-//            }
-//
-//            ProductImage image = ProductImage.builder()
-//                    .imageUrl(filePath)
-//                    .build();
-//
-//            image = imageRepository.save(image);
-//            variant.setImage(image);
-//        }
+        if (variantRequest.image() != null && !variantRequest.image().isEmpty()) {
+            try {
+                String imageUrl = cloudinaryUtil.upload(variantRequest.image());
 
-        final ProductVariant savedVariant = variant;
-
-        if (variantRequest.attributes() != null) {
-            List<ProductAttribute> attributes = variantRequest.attributes().stream()
-                    .map(attribute -> ProductAttribute.builder()
-                            .type(attribute.type())
-                            .value(attribute.value())
-                            .productVariant(savedVariant)
-                            .build())
-                    .collect(Collectors.toList());
-
-            variant.setAttributes(attributes);
+                variant.setImageUrl(imageUrl);
+                log.info("Đã upload ảnh lên Cloudinary cho variant: {}", imageUrl);
+            } catch (IOException e) {
+                log.error("Không thể upload ảnh lên Cloudinary: {}", e.getMessage(), e);
+                throw new BusinessException("Không thể upload ảnh lên Cloudinary: " + e.getMessage());
+            }
         }
+
+        variant = variantRepository.save(variant);
 
         variant = variantRepository.save(variant);
 
@@ -133,55 +113,40 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         ProductVariant variant = variantRepository.findById(variantId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy biến thể sản phẩm"));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
-                throw new BusinessException("You cannot update product from another store.");
-            }
-        } else {
-            throw new BusinessException("You authentication is not available, please try again.");
-        }
-
-//        if (variantRequest.image() != null && !variantRequest.image().isEmpty()) {
-//            if (variant.getImage().getImageUrl() != null) {
-//                File oldFile = new File(variant.getImage().getImageUrl());
-//                if (oldFile.exists() && oldFile.isFile()) {
-//                    if (oldFile.delete()) {
-//                        log.info("Deleted old avatar: " + variant.getImage().getImageUrl());
-//                    } else {
-//                        log.warn("Failed to delete old avatar: " + variant.getImage().getImageUrl());
-//                    }
-//                }
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        if (authentication.getPrincipal() instanceof Jwt jwt) {
+//            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
+//                throw new BusinessException("You cannot update product from another store.");
 //            }
-//
-//            String filePath = fileUtil.saveFile(variantRequest.image(), BASE_DIRECTORY);
-//            if (filePath == null) {
-//                throw new BusinessException("Không thể upload file, vui lòng thử lại");
-//            }
-//
-//            ProductImage newImage = ProductImage.builder()
-//                    .imageUrl(filePath)
-//                    .build();
-//            newImage = imageRepository.save(newImage);
-//
-//            variant.setImage(newImage);
+//        } else {
+//            throw new BusinessException("Your authentication is not available, please try again.");
 //        }
 
-        variantMapper.updateProductVariant(variantRequest, variant);
-
-        if (variantRequest.attributes() != null) {
-            attributeRepository.deleteAll(variant.getAttributes());
-
-            var attributes = variantRequest.attributes().stream()
-                    .map(attribute -> ProductAttribute.builder()
-                            .type(attribute.type())
-                            .value(attribute.value())
-                            .build())
-                    .collect(Collectors.toList());
-
-            variant.setAttributes(attributes);
+        if (variantRequest.image() != null && !variantRequest.image().isEmpty() && variant.getImageUrl() != null && variant.getImageUrl() != null) {
+            try {
+                cloudinaryUtil.remove(variant.getImageUrl());
+                log.info("Đã xóa ảnh cũ từ Cloudinary: {}", variant.getImageUrl());
+            } catch (IOException e) {
+                log.warn("Không thể xóa ảnh cũ từ Cloudinary: {}", variant.getImageUrl(), e);
+                throw new BusinessException("Không thể xóa ảnh cũ từ Cloudinary: " + e.getMessage());
+            }
         }
+
+        // Upload ảnh mới lên Cloudinary nếu có
+        if (variantRequest.image() != null && !variantRequest.image().isEmpty()) {
+            try {
+                String imageUrl = cloudinaryUtil.upload(variantRequest.image());
+
+                variant.setImageUrl(imageUrl);
+                log.info("Đã upload ảnh mới lên Cloudinary: {}", imageUrl);
+            } catch (IOException e) {
+                log.error("Không thể upload ảnh lên Cloudinary: {}", e.getMessage(), e);
+                throw new BusinessException("Không thể upload ảnh lên Cloudinary: " + e.getMessage());
+            }
+        }
+
+        variantMapper.updateProductVariant(variantRequest, variant);
 
         variant = variantRepository.save(variant);
 
@@ -198,15 +163,15 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy biến thể sản phẩm"));
 
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
-                throw new BusinessException("You cannot update product from another store.");
-            }
-        } else {
-            throw new BusinessException("You authentication is not available, please try again.");
-        }
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        if (authentication.getPrincipal() instanceof Jwt jwt) {
+//            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
+//                throw new BusinessException("You cannot update product from another store.");
+//            }
+//        } else {
+//            throw new BusinessException("You authentication is not available, please try again.");
+//        }
 
         variantRepository.deleteById(variantId);
         return new GlobalResponse<>(
@@ -221,34 +186,41 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         ProductVariant variant = variantRepository.findById(variantId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy biến thể sản phẩm"));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        if (authentication.getPrincipal() instanceof Jwt jwt) {
+//            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
+//                throw new BusinessException("You cannot update product from another store.");
+//            }
+//        } else {
+//            throw new BusinessException("Your authentication is not available, please try again.");
+//        }
 
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            if (!variant.getProduct().getCreatedBy().equals(jwt.getClaimAsString("sub"))) {
-                throw new BusinessException("You cannot update product from another store.");
+        // Xóa ảnh cũ từ Cloudinary nếu có
+        if (variant.getImageUrl() != null) {
+            try {
+                cloudinaryUtil.remove(variant.getImageUrl());
+                log.info("Đã xóa ảnh cũ từ Cloudinary: {}", variant.getImageUrl());
+            } catch (IOException e) {
+                log.warn("Không thể xóa ảnh cũ từ Cloudinary: {}", variant.getImageUrl(), e);
+                throw new BusinessException("Không thể xóa ảnh cũ từ Cloudinary: " + e.getMessage());
+            }
+        }
+
+        // Upload ảnh mới lên Cloudinary
+        if (image != null && !image.isEmpty()) {
+            try {
+                String imageUrl = cloudinaryUtil.upload(image);
+                variant.setImageUrl(imageUrl);
+                log.info("Đã upload ảnh mới lên Cloudinary: {}", imageUrl);
+            } catch (IOException e) {
+                log.error("Không thể upload ảnh lên Cloudinary: {}", e.getMessage(), e);
+                throw new BusinessException("Không thể upload ảnh lên Cloudinary: " + e.getMessage());
             }
         } else {
-            throw new BusinessException("You authentication is not available, please try again.");
+            throw new BusinessException("Không có ảnh được cung cấp để upload");
         }
 
-        if (variant.getImageUrl() != null) {
-            File oldFile = new File(variant.getImageUrl());
-                if (oldFile.exists() && oldFile.isFile()) {
-                    if (oldFile.delete()) {
-                        log.info("Deleted old avatar: " + variant.getImageUrl());
-                    } else {
-                        log.warn("Failed to delete old avatar: " + variant.getImageUrl());
-                    }
-                }
-        }
-
-        String filePath = FileUtil.saveFile(image, BASE_DIRECTORY);
-        if (filePath == null) {
-            throw new BusinessException("Không thể upload file, vui lòng thử lại");
-        }
-
-
-        variant.setImageUrl(filePath);
         variantRepository.save(variant);
 
         return new GlobalResponse<>(Status.SUCCESS, "Cập nhật ảnh cho biến thể thành công");
@@ -277,10 +249,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
             if (variant.getStock() < request.quantity()) {
                 throw new BusinessException("Không đủ sản phẩm trong kho hàng");
-            }
-
-            if (!variant.getProduct().getId().equals(request.productId())) {
-                throw new BusinessException("Sản phẩm không có biến thể được cung cấp.");
             }
         }
         return true;
@@ -325,10 +293,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 throw new EntityNotFoundException("Không tìm thấy sản phẩm");
             }
 
-            if (!variant.getProduct().getId().equals(request.productId())) {
-                throw new BusinessException("Sản phẩm không có biến thể được cung cấp.");
-            }
-
             if (variant.getStock() < request.quantity()) {
                 throw new BusinessException("Không đủ sản phẩm trong kho hàng.");
             }
@@ -367,26 +331,13 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private ProductResponse getProductResponse(Product product) {
         ProductResponse response = productMapper.toProductResponse(product);
         response.setImages(product.getImages().stream()
-                .map(productImage -> {
-                    var imageResponse = imageMapper.toProductImageResponse(productImage);
-
-                    if (productImage.getImageUrl() != null){
-                        imageResponse.setImageUrl(ROOT_DIRECTORY + '\\' + imageResponse.getImageUrl());
-                    }
-
-
-                    return imageResponse;
-                })
+                .map(imageMapper::toProductImageResponse
+                )
                 .collect(Collectors.toList())
         );
         response.setVariants(product.getVariants().stream()
                 .map(productVariant -> {
                     ProductVariantResponse variantResponse = variantMapper.toProductVariantResponse(productVariant);
-
-                    if (productVariant.getProduct() != null) {
-                        variantResponse.setImageUrl(ROOT_DIRECTORY + '\\' + productVariant.getImageUrl());
-                    }
-
                     variantResponse.setAttributes(
                             productVariant.getAttributes().stream()
                                     .map(attribute -> ProductAttributeResponse.builder()

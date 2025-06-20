@@ -3,6 +3,7 @@ package com.microservice.ecommerce.model.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * ----------------------------------------------------------------------------
@@ -22,6 +23,8 @@ public record CategoryRequest(
 
         @Schema(description = "Mô tả danh mục", example = "Các loại giày thể thao đa dạng mẫu mã")
         @Size(max = 255, message = "Description cannot exceed 255 characters")
-        String description
+        String description,
+
+        MultipartFile image
 ) {
 }
